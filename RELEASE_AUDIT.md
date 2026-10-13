@@ -1,108 +1,91 @@
 # Release audit
 
-Candidate: **1.0.0 remediation working tree**, based on commit **`da58b2d9a6c30ba5f78ccc2f6dda25be51dfd0ac`**, reviewed on **13 October 2026**. The fixes are local and have not been committed or pushed.
+- **Project:** SDEX ConnectMap
+- **Version:** 1.0.0 source release
+- **Reviewed:** 13 October 2026
+- **Validated repository commit:** [`2ce9fac20c9adb36087a779f636bc62f72cee8d0`](https://github.com/pablonietopareja/sdex-connectmap/commit/2ce9fac20c9adb36087a779f636bc62f72cee8d0)
+**GitHub Actions:** [Run #38408177090](https://github.com/pablonietopareja/sdex-connectmap/actions/runs/38408177090) — **SUCCESS**, five successful jobs.
 
-**Local remediation: PASS. CI acceptance: INCOMPLETE.** The Linux editor failure is reproduced and corrected; source checks pass locally on Windows and Ubuntu, and the exact packaged image passes native AMD64 acceptance. No fully successful remote workflow exists yet. A remote run of the fixes and native ARM64 acceptance remain pending.
+**Release assessment: READY FOR SOURCE RELEASE.** The public source builds, passes its configured automated checks on Linux and Windows, and passes isolated native Linux AMD64 and ARM64 container acceptance. This assessment is bounded by the checks below; it is not an independent industrial certification, penetration test, image OS vulnerability assessment or guarantee of operation in every SDEX installation.
 
-**Deployment qualification: INCOMPLETE.** Native AMD64 synthetic container acceptance passes; native ARM64 acceptance and real SDEX integration of this snapshot remain separate. Maintainer field testing of the original ARM edgeNode deployment predates these changes and is not relabeled as candidate or CI acceptance.
+The validated commit contains the tested application and test-harness remediation. The subsequent visual change to the README's lead screenshot is included in the validated commit; it does not alter the runtime. A documentation-only update after this review will create a new commit and its own CI run. Do not confuse that future run with the completed evidence above.
 
-## Published CI evidence
+## Published verification
 
-Latest observed run: [38391343317](https://github.com/pablonietopareja/sdex-connectmap/actions/runs/38391343317), commit [da58b2d9a6c30ba5f78ccc2f6dda25be51dfd0ac](https://github.com/pablonietopareja/sdex-connectmap/commit/da58b2d9a6c30ba5f78ccc2f6dda25be51dfd0ac), overall **FAIL**. The complete Linux job log and the run's job/step results were reviewed.
+The following results are taken from the [completed GitHub Actions run #38408177090](https://github.com/pablonietopareja/sdex-connectmap/actions/runs/38408177090), executed against the exact validated commit on 13 October 2026.
 
-| Published job | Recorded conclusion | Scope |
+| GitHub Actions job | Result | Confirmed scope |
 | --- | --- | --- |
-| `source (windows-2022)` | PASS | All source/browser/package steps completed |
-| `source (ubuntu-24.04)` | FAIL | Editor test expected one visible saved waypoint after a cable click; received zero. Backend, frontend and both visual tests passed. |
-| `security` | PASS | Declared dependency, Bandit and public-source Gitleaks checks |
-| `container` | SKIPPED | Source matrix failure prevented native AMD64/ARM64 jobs from running |
+| `source (ubuntu-24.04)` | **PASS** | Locked Python/npm installation, Ruff checks, 271 backend tests, 138 frontend tests, production frontend build, source startup/persistence, four Chromium tests across visual/editor suites, release verification and packaging. |
+| `source (windows-2022)` | **PASS** | Equivalent source checks: 271 backend tests, 138 frontend tests, four Chromium tests and verified source packaging. |
+| `security` | **PASS** | `pip-audit` for pinned runtime requirements, `npm audit`, Bandit medium/high checks, and Gitleaks scan of the extracted public source archive. |
+| `container (ubuntu-24.04)` | **PASS** | Compose definition validation, native AMD64 Docker build from packaged source context, disposable container acceptance and persistence checks. |
+| `container (ubuntu-24.04-arm)` | **PASS** | Compose definition validation, native ARM64 Docker build from packaged source context, disposable container acceptance and persistence checks. |
 
-**Last fully successful workflow run: none.** The repository's observed run history contains only the failed initial run. No newer successful run URL or SHA is claimed. The workflow retains `needs: [source, security]` for native container acceptance; it does not turn skipped jobs into success.
+The container acceptance script checks a running HTTP UI and API, application health, synthetic topology in Mock Mode, the non-root UID `10001`, saved settings and the encryption key across container restart. Both container jobs completed with the acceptance script's explicit `PASS` message. A successful healthcheck shows the local service is operational; it does not prove that a real SDEX server is reachable or all devices are connected.
 
-## Remediation and regression evidence
+In the successful security job, pip-audit reported no known advisories for the tested Python dependency set, `npm audit` reported zero vulnerabilities, and Gitleaks reported no leaks in the extracted source. Bandit completed its configured review. These checks are useful but do not establish that the entire container, industrial integration or runtime environment is free of vulnerabilities.
 
-The unchanged revision reproduces the editor failure in clean Ubuntu Chromium. The test waited 400 ms after a 450 ms Fit topology animation, calculated a screen-space SVG point and then used a raw mouse click. The original failure trace shows the viewport moving approximately 1.4 pixels vertically between measurement and input. A diagnostic reproduction confirms the pointer events reach the adjacent device card, while the saved manual route still contains its `rack-bend` waypoint and the edge path remains unchanged. The failure is in test synchronization, not waypoint persistence or the selection behavior.
+## Earlier failure and remediation
 
-The editor test now waits for stable viewport/SVG geometry across animation frames, retries replaced or temporarily untargetable paths, and verifies edge selection before counting controls. Existing waypoint and reload-persistence assertions remain. A focused regression starts an animated fit, selects the persisted cable and confirms that the saved waypoint appears without a route write or connection-identity change. No application runtime or security behavior was changed.
+The [initial run #38391343317](https://github.com/pablonietopareja/sdex-connectmap/actions/runs/38391343317), on commit [`da58b2d9a6c30ba5f78ccc2f6dda25be51dfd0ac`](https://github.com/pablonietopareja/sdex-connectmap/commit/da58b2d9a6c30ba5f78ccc2f6dda25be51dfd0ac), failed a Linux Chromium editor test; the dependent container jobs were skipped. Windows source and security checks passed.
 
-Native Docker checks exposed a second harness issue: Docker 29 changed the random loopback host port across restart. The previous script continued querying the old port even though the restarted application was healthy. `scripts/container_acceptance.py` now reads the actual binding again and asserts that it remains `127.0.0.1`; random ports, disposable volumes, UID 10001 and all hardening flags are retained.
+Investigation showed an interaction-timing race: the test waited 400 ms during a 450 ms animated *Fit topology* transition, measured a moving SVG path and clicked a position that was no longer targetable. The saved route and waypoint remained intact. The corrected editor test waits for stable viewport and SVG geometry, validates selection and retains the waypoint/persistence assertions. A regression covers selecting the persisted cable after an animated fit without creating a new route or changing source connections.
 
-Visual/editor traces use separate result directories. Failed source jobs now retain only Playwright results for 14 days using a commit-pinned upload action. Baseline failure traces, pointer/route diagnostics, successful browser traces and exact Docker build/acceptance logs were retained outside the public source tree.
+A separate Docker acceptance harness issue was also corrected. Docker may assign a different random loopback host port when a disposable test container restarts. The test script now reads the current binding after restart and verifies that exposure remains limited to `127.0.0.1`. The test continues to use a disposable volume, dropped capabilities, a read-only root filesystem, UID `10001` and a persistent credential key.
 
-Tested file SHA-256 values:
+Both corrections were published in commit [`8d8be32655e903716b080cf4d579cdf648f1a9a9`](https://github.com/pablonietopareja/sdex-connectmap/commit/8d8be32655e903716b080cf4d579cdf648f1a9a9). The [subsequent successful run #38401937560](https://github.com/pablonietopareja/sdex-connectmap/actions/runs/38401937560) passed all five jobs. The more recent run #38408177090 again passed all five jobs after a documentation-image change.
 
-- `frontend/e2e/editor.e2e.ts`: `62927927c9df21b94c4a82d74c4206978087309f88cf6bd55c40d0106afb98e6`.
-- `scripts/container_acceptance.py`: `87c9d180365af2ba30c9ccadd7a401790380f5f4202e01c5c61866484a0b4178`.
+## Release and local verification record
 
-These identify the tested local changes; they are not a new commit SHA.
+The original public-source preparation and subsequent local remediation recorded these additional checks. They are retained as historical **local verification evidence**, not re-described as tasks executed by the latest documentation review.
 
-## Source and distribution changes
+| Check | Status | Evidence or scope |
+| --- | --- | --- |
+| Rights and original-code distribution review | **Maintainer-declared** | Application released under MIT with upstream dependency notices retained. This is not a third-party legal opinion or confirmation of any employer's ownership rights. |
+| Clean locked backend installation | **PASS (local)** | Fresh Python installation with `pip install --require-hashes -r backend/requirements-dev.txt`. |
+| Python lint/format and backend tests | **PASS (CI and local)** | Ruff validation; 271 tests on each CI source platform. Local remediation used Python 3.12 on Windows and Ubuntu. |
+| Frontend lint, unit tests and build | **PASS (CI and local)** | 138 frontend tests per CI source platform, with successful production builds. |
+| Browser acceptance | **PASS (CI and local)** | Two visual and two editor Chromium tests per CI source platform, including waypoint-selection regression. |
+| Repeated Linux waypoint regression | **PASS (local)** | Three consecutive focused runs recorded by local remediation. Not a claim that CI ran `--repeat-each=3`. |
+| Vite development proxy / Origin guard | **PASS (local)** | Isolated backend and Vite proxy acceptance with a successful same-origin settings mutation. |
+| Python dependency advisory check | **PASS (CI and local)** | pip-audit of hash-locked runtime requirements; no known advisories in the tested set. |
+| npm dependency advisory check | **PASS (CI and local)** | `npm audit`; zero known advisories reported in CI. |
+| Bandit static security scan | **PASS (CI and local)** | Configured medium/high severity checks completed; earlier full local review noted three low-level string/fixture findings. |
+| Gitleaks public-source scan | **PASS (CI and local)** | No leaks found in the extracted source archive. Scanner results are not a proof that every possible secret is absent. |
+| Source boundaries and links | **PASS (CI)** | `scripts/verify_release.py` confirmed 240 public files, required build inputs, local links and SVG safety rules. |
+| Deterministic archive packaging | **PASS (local)** | Prior verification compared repeat source ZIP / build-context TAR output and member hashes. CI builds a source ZIP and build context. |
+| Separate-copy source installation/startup | **PASS (CI and local)** | `scripts/source_acceptance.py`: synthetic UI, health/SSE, settings and encryption-key persistence. |
+| Compose CLI validation | **PASS (CI)** | Both `compose.yaml` and `portainer-stack.yml` validated in native Linux container jobs. |
+| Native AMD64 Docker build and acceptance | **PASS (CI)** | Packaged-context build and disposable container runtime acceptance. |
+| Native ARM64 Docker build and acceptance | **PASS (CI)** | Packaged-context build and disposable container runtime acceptance on `ubuntu-24.04-arm`. |
+| Real SDEX integration by CI | **NOT RUN** | CI deliberately uses synthetic fixtures and does not connect to an industrial SDEX endpoint. |
+| Raspberry Pi / edgeNode field operation | **PASS — maintainer reported** | Maintainer confirms operational container deployment and successful communication with a real SDEX API. No independent field-test log or exact-commit requalification is claimed. |
+| Built-image OS / native-component vulnerability and licensing scan | **NOT RUN** | No evidenced Trivy, Grype or equivalent OS-level scan of the built candidate image. Application dependency reviews and runtime notices are not a substitute. |
+| External penetration test / industrial certification | **NOT RUN** | Not commissioned or claimed. |
 
-The release uses the current FastAPI backend, React/TypeScript frontend, canonical SVG assets and synthetic test fixtures. All 36 Python runtime modules in the original ARM64 image matched the working source before the changes. The public repository starts without an existing database or saved SDEX profile.
+The local review also recorded successful hash-locked ARM64 runtime wheel availability, Windows and Ubuntu source checks, a clean public source archive, upstream license inventories and CycloneDX runtime dependency records. See [dependency inventories](docs/sbom/README.md) and [licensing](docs/LICENSING.md). The inventory does not enumerate all OS packages, browser binaries or native libraries in the final image.
 
-- Added upstream response limits, authentication expiry validation and browser Origin checks for local mutations.
-- Preserved the browser Host through Vite's development proxy so same-origin local configuration changes pass the new Origin guard.
-- Removed embedded URI credentials and query parameters from displayed topology fields, including restored snapshots.
-- Updated vulnerable Python dependencies and frontend development tools; retained the application architecture and frontend runtime libraries.
-- Locked Python dependencies with hashes, retained the npm lockfile and pinned Docker base image digests.
-- Defaulted direct source listening and host port publication to loopback; retained non-root containers, a writable data volume and a read-only root filesystem.
-- Restored compact-screen access to the existing status details, including the Mock Mode indicator, without changing the desktop layout.
-- Replaced machine-specific preview launchers with portable browser test setup and deterministic packaging scripts.
-- Included MIT application licensing, actual upstream dependency notices and complete deployment/development documentation.
+## Source distribution and security boundaries
 
-Deployment state, keys, certificates, logs, operational exports, installed packages and prebuilt images are excluded. Documentation images show the application using synthetic Mock Mode.
+The release contains the FastAPI backend, React/TypeScript frontend, synthetic test fixtures, Docker/Portainer deployment definitions, canonical SVG assets, application tests, packaging scripts and public documentation. Operational databases, passwords, encryption keys, certificates, logs, deployment state and prebuilt private images are excluded. Public interface screenshots use synthetic Mock Mode.
 
-## Verification record
+The application performs SDEX discovery via supported read APIs. Authentication uses the necessary login, refresh and logout POST operations; ConnectMap does not issue commands that create SDEX connections or change industrial device values. Missing or failed module reads are represented as partial, unknown or stale information rather than fabricated topology.
 
-Clean local environments: Windows AMD64 with Python 3.12.7, Node.js 24.18.0 and npm 11.16.0; disposable Ubuntu 24.04.5 AMD64 under WSL2 with Python 3.12.3, Node.js 22.23.3 and npm 10.9.9. Playwright 1.61.1 uses Chromium 149.0.7827.55, matching the failed Linux CI browser. Tests use disposable data directories and synthetic SDEX responses. No live SDEX server is contacted.
+The supplied container is non-root and requires neither `privileged` mode nor a Docker socket. The published host bind defaults to loopback. **The web application has no built-in user authentication**: clients able to reach the service can view the topology and modify ConnectMap configuration. Use controlled network access and an authenticated HTTPS reverse proxy or VPN when appropriate. Restrict outbound access to authorized SDEX destinations.
 
-| Check | Artifact and method | Result | Evidence and scope |
-| --- | --- | --- | --- |
-| Rights and licensing | Maintainer authorization; source/asset and dependency review | PASS | Application redistribution under MIT is authorized. Dependencies retain their own licenses; no private SDK or API manual is bundled. |
-| Backend clean install | Fresh Python environment; `pip install --require-hashes -r backend/requirements-dev.txt` | PASS | Public dependencies resolved and installed without the development environment. |
-| Backend tests | `cd backend; python -m pytest -q` | PASS | 271 tests passed on Windows and 271 on Ubuntu. One upstream Starlette test-client deprecation warning remains on each platform. |
-| Python lint and format | Ruff 0.11.13; backend and release scripts | PASS | Narrow suppressions identify fixed local tooling and container-only paths. |
-| Frontend install, lint, unit tests and build | `npm ci --ignore-scripts --no-audit --no-fund`, `npm run lint`, `npm test`, `npm run build` | PASS | 138 unit/component tests and production builds passed on Windows and Ubuntu. |
-| Browser acceptance | Chromium; `npm run test:e2e` and `npm run test:e2e:editor` | PASS | Both platforms pass 2 visual and 2 editor tests, including the new persisted-waypoint selection regression. Original Rack/Switch/link editing, routes, themes, responsive views and reload assertions remain. |
-| Repeated Linux selection regression | `npx playwright test --config playwright.editor.config.ts --grep 'selecting a persisted cable' --repeat-each=3 --trace on` | PASS | Three consecutive runs pass without a fixed delay, route write or relaxed assertion. |
-| Development proxy integration | Actual Vite server, `VITE_API_PROXY` and disposable `scripts/e2e_server.py`; browser-Origin `PUT /api/settings` | PASS | Separate free loopback ports; proxied configuration mutation returns HTTP 200 and saves the requested interval. No real SDEX profile is used. |
-| Python dependency audit | pip-audit 2.10.1; full hash-locked runtime requirements | PASS | No known advisories reported after upgrading affected dependencies. This is a dependency advisory check, not a vulnerability-free guarantee. |
-| npm dependency audit | `npm audit`; entire frontend lockfile | PASS | No known advisories reported after refreshing development dependencies. |
-| Static security review | Bandit 1.9.4; `bandit -r backend/app -ll` and full JSON review | PASS | Zero medium/high findings. Three low B105 findings are field-name/redaction strings and an intentional synthetic password fixture. |
-| Public source secret scan | Gitleaks 8.30.0; `gitleaks dir <extracted-source> --redact --no-banner` | PASS | No findings in the public source/archive contents; compiled frontend assets also scanned with no findings. Generated installation state is not part of the public source. |
-| Package boundaries and links | `python scripts/verify_release.py` | PASS | All 240 public files, required inputs, local links and SVG safety checks passed. No external symlinks or machine-specific home paths. |
-| Archive integrity and reproducibility | `python scripts/build_release.py`; ZIP/TAR member hashes and repeated SHA-256 comparison | PASS | Source ZIP and build-context TAR contain the expected files at their root; extracted bytes match source. Repeated builds produce identical checksums. |
-| Separate-copy install/startup | Extracted source outside the development tree; `python scripts/source_acceptance.py` | PASS | Fresh locked Python/npm installs, frontend lint/unit tests/build, HTTP compiled UI, Mock Mode, health, initial SSE, settings persistence and generated-key retention across process restart. No original tree dependency. |
-| Staged source and Git whitespace | Disposable checkout; `git diff --cached --check` and staged file inventory | PASS | 240 source files staged at repository root on `main`; no credentials, installed packages or nested release folder. Two upstream license texts retain their original whitespace using narrow attributes. No commit or push was performed. |
-| Deployment YAML structure | PyYAML 6.0.3 with duplicate-key rejection and security-setting assertions | PASS | Both definitions have loopback publication, a dedicated volume, read-only root, dropped capabilities and no-new-privileges. This is not Docker Compose CLI acceptance. |
-| Linux ARM64 dependency availability | `pip download --require-hashes --only-binary=:all:` with Python 3.12 and compatible aarch64 manylinux tags | PASS | All 21 locked runtime distributions downloaded successfully. This checks wheel availability, not ARM execution. |
-| Workflow lint | actionlint 1.7.12; `.github/workflows/ci.yml` | PASS | Syntax/action references checked locally; remote workflow execution remains separate. |
-| GitHub Actions execution of local fixes | Updated workflow source and security/container jobs | NOT RUN | Changes are unpushed. The historical initial failure and skipped container job remain recorded above; no new remote conclusion exists. |
-| Compose CLI validation | `docker compose config --quiet`; `docker compose -f portainer-stack.yml config --quiet` | PASS | Docker Compose 2.40.3 on disposable Ubuntu AMD64. |
-| Native AMD64 packaged build/runtime | `DOCKER_BUILDKIT=1 docker build --progress=plain -t sdex-connectmap:ci-remediated - < candidate-build-context.tar`; `python scripts/container_acceptance.py --image sdex-connectmap:ci-remediated` | PASS | Docker 29.1.3, Buildx 0.30.1; exact delivered context built natively and passed Mock Mode, HTTP UI, healthcheck, UID 10001, settings/key persistence and cleanup. |
-| Native ARM64 candidate runtime | Native Linux ARM64 container job | NOT RUN | No native ARM64 host was used; the original remote container matrix was skipped. Emulation or image manifests do not establish native acceptance. |
-| Real SDEX candidate integration | Authorized, read-only field environment | NOT RUN | Local verification deliberately uses synthetic fixtures. |
-| Original ARM edgeNode deployment | Maintainer field testing of 1.0.0 | PASS | Original application and features tested successfully; does not replace candidate container acceptance. |
-| Built-image OS advisory/license scan | Trivy/Grype or equivalent on rebuilt image | NOT RUN | No built-image scanner was executed. Dependency/SAST checks and retained application notices do not cover every OS package or embedded native library. |
+TLS verification defaults to enabled. Saved SDEX passwords are Fernet-encrypted, with the key preserved in `/data` or provided externally. Other stored information—including addresses, usernames, device inventory and visual settings—is not encrypted. Protect the data volume and backup material. The configured SDEX origin does not have an application-enforced destination allowlist; network segmentation remains important.
 
-Exact native AMD64 artifact record:
+SQLite, the scheduler, refresh coordinator and SSE subscribers are process-local. Run one application process per data volume. SSE queues are bounded per subscriber but there is no total subscriber quota. Snapshot freshness, alarms and animated cables must not be interpreted as measurements of physical topology or live network traffic.
 
-- Docker build-context SHA-256: `8edc3a6eea306e00d5704cd1399bdb883b62dc7de88c7fb26e26d86486204669`.
-- Local image ID: `sha256:85ea7b852d23cdbc777e01dfa668c7f82cf5df2c91fc4af3d5444ea587323383` (`amd64`); this is not a published registry digest.
-- Final acceptance completed at `2026-10-13T12:33:45Z`.
+The software is published under the [MIT license](LICENSE), with the existing [third-party notices](THIRD_PARTY_NOTICES.md) and [licensing guidance](docs/LICENSING.md). The license declaration assumes the maintainer is authorized to distribute the original source and project assets. Vendor trademarks, source-code ownership and other third-party rights remain governed by their respective terms.
 
-Application runtime files, dependencies, MIT license, upstream notices and Docker deployment permissions are unchanged by this remediation. No repository push, image publication, tag or release was performed.
+## Release conclusion
 
-The lockfiles were generated with pip-tools 7.6.2. [Runtime CycloneDX inventories](docs/sbom/README.md) cover the locked Python distributions and npm's non-development graph; they exclude OS packages, embedded native libraries and browser binaries. License inventories match all 21 Python runtime entries and all 28 non-development npm lock entries, with retained upstream notices for every entry.
+**Automated source and container acceptance: COMPLETE — PASS** for validated commit `2ce9fac20c9adb36087a779f636bc62f72cee8d0`.
 
-The original source and deployment-state file hashes were checked again after preparation and remained unchanged. All acceptance processes and storage were disposable; no existing service, production volume or SDEX configuration was modified.
+**Maintainer field experience: REPORTED PASS** on Raspberry Pi and edgeNode with a real SDEX API, separately from the CI evidence.
 
-## Security and compatibility boundaries
+**Residual verification:** built-image OS/native-component scanning, third-party penetration testing, industrial certification and exact-commit live-SDEX qualification have not been independently established.
 
-The UI/API has no built-in sign-in. Anyone with access can view the inventory and change ConnectMap settings; deploy behind controlled ingress, authentication and HTTPS as appropriate. Origin checks help with browser requests but do not authorize callers. The configured SDEX origin is an administrator-controlled network target; there is no destination allowlist. Restrict outbound reachability at the deployment boundary.
-
-TLS verification defaults to enabled. Only the saved SDEX password is encrypted. Protect the database, generated encryption key and backups together. Addresses, usernames, topology and visual settings remain plaintext infrastructure inventory. SSE queues are bounded per subscriber; the total subscriber count is not capped. Use one application worker and limit connections at ingress.
-
-Discovery depends on the configured SDEX modules, permissions and field availability. The graph visualizes API configuration and local edits rather than proving physical cabling. Missing status remains unknown; partial or cached discovery is identified. This release stores the latest snapshot rather than a telemetry history. Product names describe integrations and do not imply vendor certification.
-
-See [Security](SECURITY.md), [Licensing](docs/LICENSING.md) and [Deployment](docs/DEPLOYMENT.md) for operating instructions.
+The source release is suitable for public distribution within these boundaries. A GitHub tag or GitHub Release is a separate manual publishing decision and must not be assumed to exist.

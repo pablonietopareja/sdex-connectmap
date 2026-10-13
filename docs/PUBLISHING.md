@@ -1,134 +1,125 @@
-# Publish the repository manually
+# Maintaining and publishing this repository
 
-Use repository name **`sdex-connectmap`** under **`pablonietopareja`**. The contents of `Github-Release/` become the repository root; do not upload an outer folder containing the project.
+The public source repository is [pablonietopareja/sdex-connectmap](https://github.com/pablonietopareja/sdex-connectmap). Its default branch is `main`; it already has a README, MIT license, documentation, CI and source history. **Do not initialize a second repository or create a new empty GitHub repository to update it.**
 
-Suggested description:
+The repository contains source code, not an image published to a Docker registry. Builds and deployments are documented separately in [Deployment](DEPLOYMENT.md).
 
-> Read-only industrial topology viewer for SDEX Suite, with a persistent interactive map, offline demo and Docker deployment.
+## Update the existing repository
 
-## 1. Review the local release
+The commands below use Windows PowerShell. Adapt the clone path if it is stored elsewhere.
 
-Read [README](../README.md), [License](../LICENSE), [Security](../SECURITY.md), [Licensing](LICENSING.md) and [Release audit](../RELEASE_AUDIT.md). Resolve any source-publication blocker before uploading. Deployment checks marked `NOT RUN` remain unqualified; do not describe them as passing in a release announcement.
-
-Check that no `.env`, database, key, real diagnostic export, private address inventory or installed dependency directory is present in the staged files. Only synthetic test data belongs in this repository.
-
-## 2. Create an empty GitHub repository
-
-Sign in to GitHub and choose **New repository**:
-
-- Owner: `pablonietopareja`
-- Name: `sdex-connectmap`
-- Visibility: **Public**
-- Description: use the text above, or edit it to your preference.
-- Leave **Add a README**, **Add .gitignore** and **Choose a license** unchecked. Those files already exist locally.
-
-Create the repository and leave its empty-repository page open. Its HTTPS remote will be `https://github.com/pablonietopareja/sdex-connectmap.git`.
-
-## 3. Enter the release folder in PowerShell
-
-Replace the example path with the actual folder on your machine:
+### 1. Inspect the checkout
 
 ```powershell
-Set-Location -LiteralPath 'C:\path\to\SDEX_ConnMap\Github-Release'
-Get-Location
-Get-ChildItem -Force
-git --version
-```
-
-At this location, `README.md`, `LICENSE`, `Dockerfile`, `backend/` and `frontend/` must be directly visible. Do not run the following steps from their parent folder.
-
-## 4. Initialize Git, or inspect an existing checkout
-
-For a folder without its own `.git` directory:
-
-```powershell
-git init --initial-branch=main
+$repo = Join-Path $HOME 'Downloads\sdex-connectmap-repo'
+Set-Location -LiteralPath $repo
 git rev-parse --show-toplevel
 git branch --show-current
-git status --short
-```
-
-The top-level path must be this release folder, and the branch must be `main`. If initialization fails, stop and inspect the error before proceeding.
-
-If `.git` already exists, inspect it first:
-
-```powershell
-git rev-parse --show-toplevel
-git branch --show-current
-git status --short
-git diff --stat
-git diff --cached --stat
 git remote -v
+git status --short
 ```
 
-If there are pre-existing edits or staged files, stop and review them. Do not run a reset, clean, forced checkout or overwrite to make the instructions fit. On a rerun, retain the existing commit and verified remote instead of initializing again. If a parent repository owns this directory, initialize a separate repository here deliberately and verify the reported root.
+Confirm that the repository root is the intended local clone, the branch is `main`, and `origin` points to `https://github.com/pablonietopareja/sdex-connectmap.git` (or the equivalent SSH URL).
 
-## 5. Verify author identity and remote
+If local edits or staged changes already exist, **review and preserve them** before applying an update. Do not discard them using `git reset --hard`, `git clean`, or a forced checkout.
+
+### 2. Synchronize only when safe
+
+For a clean checkout:
+
+```powershell
+git fetch origin main
+git pull --ff-only origin main
+git status --short
+```
+
+If `pull --ff-only` cannot proceed, inspect the branch divergence before making further changes. Do not merge or force-push simply to make the command succeed.
+
+### 3. Edit or copy the intended files
+
+Only update files that are part of the reviewed change. For a documentation-only update, preserve source code, tests, CI, `LICENSE`, dependency locks, application assets and deployment data.
+
+To review the resulting patch:
+
+```powershell
+git diff --check
+git diff --stat
+git diff -- README.md RELEASE_AUDIT.md CHANGELOG.md docs/DEPLOYMENT.md docs/DEVELOPMENT.md docs/PUBLISHING.md
+git status --short
+```
+
+Review relative links and factual claims. CI results must identify a specific commit and completed run; site-specific field validation must be attributed separately from automated tests.
+
+### 4. Stage only the changed documentation
+
+If **all six** documentation files were intentionally changed:
+
+```powershell
+git add -- README.md RELEASE_AUDIT.md CHANGELOG.md docs/DEPLOYMENT.md docs/DEVELOPMENT.md docs/PUBLISHING.md
+git diff --cached --check
+git diff --cached --stat
+git diff --cached --name-only
+```
+
+If fewer files were modified, stage only those files. Check that the staged inventory contains no `.env`, keys, databases, diagnostic exports, real topology data or generated archives. Review the full patch with `git diff --cached` when necessary.
+
+### 5. Commit and push manually
+
+When the staged files and author identity are correct:
 
 ```powershell
 git config user.name
 git config user.email
-git remote -v
+git commit -m "docs: finalize SDEX ConnectMap 1.0.0 release audit"
+git push origin main
+git status
 ```
 
-If necessary, set a **local** identity. Replace the email placeholder with your verified GitHub email or the exact privacy address shown in GitHub's email settings:
+Do not put credentials in the Git remote URL, and do not use `--force`. If a push is rejected because the remote has moved, fetch the new state and reconcile the changes without rewriting published history.
+
+### 6. Review CI after the push
+
+Open [GitHub Actions](https://github.com/pablonietopareja/sdex-connectmap/actions) and select the workflow run triggered by the **new commit**. Wait for its conclusion; a previous successful run is not proof that a later commit has passed.
+
+Confirm these five jobs:
+
+| Job | Expected result |
+| --- | --- |
+| `source (ubuntu-24.04)` | Success |
+| `source (windows-2022)` | Success |
+| `security` | Success |
+| `container (ubuntu-24.04)` | Success |
+| `container (ubuntu-24.04-arm)` | Success |
+
+If a job fails, read its logs and reproduce the failure before making further changes. Keep the failure in the history rather than deleting or re-labeling it. The previously validated source run is [#38408177090](https://github.com/pablonietopareja/sdex-connectmap/actions/runs/38408177090), commit `2ce9fac20c9adb36087a779f636bc62f72cee8d0`.
+
+## Tagging version 1.0.0 (optional)
+
+At the time the release documentation was last reviewed, there was no `v1.0.0` tag or GitHub Release. Once the intended final source commit and its **new** CI run both pass, a maintainer may create a signed or annotated tag manually.
+
+From an up-to-date, clean checkout:
 
 ```powershell
-git config --local user.name 'Pablo Nieto Pareja'
-git config --local user.email 'YOUR_VERIFIED_GITHUB_EMAIL'
+git fetch origin main --tags
+git status
+git tag --list v1.0.0
 ```
 
-For a checkout without an `origin` remote:
+Only if the tag does **not** already exist and the current commit is the intended final release:
 
 ```powershell
-git remote add origin https://github.com/pablonietopareja/sdex-connectmap.git
-git remote -v
+git tag -a v1.0.0 -m "SDEX ConnectMap 1.0.0"
+git push origin v1.0.0
 ```
 
-If `origin` already exists, compare its owner/name with the intended empty repository. Keep it when correct; stop and inspect a mismatch rather than silently replacing it. GitHub's browser/device sign-in or a configured credential manager can handle HTTPS authentication; do not put a token in the URL.
+Then open [Releases](https://github.com/pablonietopareja/sdex-connectmap/releases), choose **Draft a new release**, select the existing `v1.0.0` tag and write release notes based on [CHANGELOG.md](../CHANGELOG.md). Do not invent binary downloads or claim that container images were published to a registry. Source artifacts are generated locally with `scripts/build_release.py`.
 
-## 6. Stage and review
+Tagging is optional; it is deliberately separate from the ordinary documentation update. Never recreate or move a tag that others may already use without an explicit release-management decision.
 
-```powershell
-git diff --check
-git add --all
-git diff --cached --check
-git diff --cached --stat
-git diff --cached --name-only
-git status --short
-```
+## Review before public distribution
 
-Read the staged file inventory. It must show the application at the root, without an extra `Github-Release/` prefix. Generated `dist/`, `frontend/dist/`, `node_modules/`, `.venv/`, data directories and secrets must not be staged. Review the actual patch with `git diff --cached` if needed.
+Check [License](../LICENSE), [Licensing](LICENSING.md), [Third-party notices](../THIRD_PARTY_NOTICES.md), [Security](../SECURITY.md) and the [Release audit](../RELEASE_AUDIT.md). Confirm that publication rights for the original code and artwork are appropriate. The repository must not include operational `.env`, credentials, SQLite volumes, customer data, industrial addresses or test captures from a real site.
 
-Create the local commit only after reviewing those files:
+Application dependency scans and synthetic native Docker acceptance are documented, but they are not a substitute for a built-image OS vulnerability/license scan, penetration test or production SDEX compatibility qualification.
 
-```powershell
-git commit -m 'Initial public source release of SDEX ConnectMap 1.0.0'
-git status --short
-git log -1 --oneline
-```
-
-The working tree should be clean. A local commit does not publish anything.
-
-## 7. Push when ready
-
-After reviewing the local commit and confirming the remote, manually run:
-
-```powershell
-git push --set-upstream origin main
-```
-
-This is the publication step. It is intentionally separate from staging and committing. Do not use `--force`. If the remote is not empty and rejects the push, inspect its contents and history; do not overwrite them.
-
-## 8. Verify GitHub
-
-Open the repository and confirm:
-
-- `main` is the default branch.
-- The README renders correctly and all local documentation links work.
-- GitHub identifies the MIT license and the copyright holder is correct.
-- The Actions workflow runs and its job results are reviewed.
-- **Settings > Code security** has private vulnerability reporting enabled when available.
-- The About description and optional topics describe the actual application, for example `sdex`, `industrial-iot`, `docker`, `fastapi`, `react` and `topology`.
-
-Do not add passing CI, native-architecture or vulnerability-free-image claims until the corresponding checks have executed. A first release tag or GitHub Release can be created later after reviewing the uploaded commit and CI results; these instructions do not create either automatically.
+For first-time forks, initialize and publish an independent repository under your own ownership. Those steps are different from updating this already established project.

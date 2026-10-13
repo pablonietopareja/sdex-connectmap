@@ -44,9 +44,9 @@ SDEX reads are limited to system information, network interfaces and supported c
 | Portainer | Optional deployment interface for a Docker environment |
 | Browser | Modern browser with JavaScript, SVG and Server-Sent Events; browser tests use Chromium |
 | Source development | Python 3.12 and Node.js 22; locked Python and npm dependencies |
-| Image targets | Linux AMD64 and ARM64; exact candidate runtime qualification is listed in the release audit |
+| Image targets | Linux AMD64 and ARM64; native container acceptance is recorded in the release audit |
 
-I have tested the application and its features on an ARM-based edgeNode, including the container deployment. The [release audit](RELEASE_AUDIT.md) records the checks performed against this source version and distinguishes them from that field validation. Module availability and device detail depend on SDEX configuration, licensing and API responses; this is not a universal device compatibility list.
+I have field-tested the application in containers on Raspberry Pi and edgeNode, including communication with a real SDEX API. This is maintainer-reported operational experience, not a claim that every supported SDEX module or the exact published commit was independently tested in that environment. The [release audit](RELEASE_AUDIT.md) separates that field experience from the automated checks for the published source.
 
 ## Quick start: offline demo
 
@@ -130,7 +130,9 @@ Pop-Location
 .\.venv\Scripts\python.exe scripts/build_release.py
 ```
 
-See [Development and testing](docs/DEVELOPMENT.md) for a local demo and browser tests. The [CI workflow](.github/workflows/ci.yml) verifies Linux/Windows source and native AMD64/ARM64 containers without publishing images, tags or releases. The [initial workflow run](https://github.com/pablonietopareja/sdex-connectmap/actions/runs/38391343317) passed Windows source and security checks but failed a Linux editor test; container jobs were skipped. The corrected tests pass locally on both platforms, and the exact packaged image passes native AMD64 container acceptance. A new remote run and native ARM64 acceptance remain pending; see the [release audit](RELEASE_AUDIT.md) for commit and artifact details.
+See [Development and testing](docs/DEVELOPMENT.md) for the local demo and browser tests.
+
+**Published verification:** the [GitHub Actions run #38408177090](https://github.com/pablonietopareja/sdex-connectmap/actions/runs/38408177090) passed all five jobs for commit [`2ce9fac20c9adb36087a779f636bc62f72cee8d0`](https://github.com/pablonietopareja/sdex-connectmap/commit/2ce9fac20c9adb36087a779f636bc62f72cee8d0): source checks on Ubuntu and Windows, configured dependency/static/secret security scans, and native AMD64 and ARM64 Docker builds with disposable container acceptance. The container tests use **synthetic Mock Mode**; they do not contact a live SDEX installation or constitute an image OS vulnerability scan. See the [release audit](RELEASE_AUDIT.md) for exact scope, test counts and limitations.
 
 ## Limitations
 
@@ -151,7 +153,7 @@ See [Development and testing](docs/DEVELOPMENT.md) for a local demo and browser 
 | [Architecture](docs/ARCHITECTURE.md) | Modules, discovery, events and storage |
 | [Configuration](docs/CONFIGURATION.md) | Environment and persisted settings |
 | [Development](docs/DEVELOPMENT.md) | Local setup, synthetic tests and packaging |
-| [Publishing](docs/PUBLISHING.md) | Manual upload to an empty GitHub repository |
+| [Publishing](docs/PUBLISHING.md) | Updating the existing GitHub repository safely |
 | [Changelog](CHANGELOG.md) | Source-release changes |
 | [Contributing](CONTRIBUTING.md) | Contribution expectations |
 | [Security](SECURITY.md) | Reporting and trust boundaries |
