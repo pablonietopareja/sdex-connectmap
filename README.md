@@ -8,9 +8,9 @@ I built SDEX ConnectMap to make SDEX connections easier to understand on an indu
 
 ## The map at a glance
 
-![SDEX ConnectMap topology in offline Mock Mode](imgs/topology-light.png)
+![SDEX ConnectMap topology in offline Mock Mode](imgs/topology-dark.png)
 
-*Synthetic connection topology in Mock Mode: device states, interface paths and the shared SDEX gateway. [View the dark theme](imgs/topology-dark.png).*
+*Synthetic connection topology in Mock Mode: device states, interface paths and the shared SDEX gateway. [View the light theme](imgs/topology-light.png).*
 
 ```mermaid
 flowchart LR
