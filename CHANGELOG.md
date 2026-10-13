@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Synchronize editor browser tests with animated viewport/path geometry and cover selection of a persisted waypoint without route changes.
+- Preserve separate visual/editor failure traces in CI while retaining native container job prerequisites.
+- Re-read the disposable container's loopback host port after restart to support Docker's ephemeral-port reassignment.
+
 ## 1.0.0 — 2026-10-13
 
 Initial public source release of SDEX ConnectMap.

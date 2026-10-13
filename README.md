@@ -130,7 +130,7 @@ Pop-Location
 .\.venv\Scripts\python.exe scripts/build_release.py
 ```
 
-See [Development and testing](docs/DEVELOPMENT.md) for a local demo and browser tests. The [CI workflow](.github/workflows/ci.yml) performs verification without publishing images, tags or releases. Its first remote execution occurs after the repository is uploaded; workflow presence alone is not evidence of a passing run.
+See [Development and testing](docs/DEVELOPMENT.md) for a local demo and browser tests. The [CI workflow](.github/workflows/ci.yml) verifies Linux/Windows source and native AMD64/ARM64 containers without publishing images, tags or releases. The [initial workflow run](https://github.com/pablonietopareja/sdex-connectmap/actions/runs/38391343317) passed Windows source and security checks but failed a Linux editor test; container jobs were skipped. The corrected tests pass locally on both platforms, and the exact packaged image passes native AMD64 container acceptance. A new remote run and native ARM64 acceptance remain pending; see the [release audit](RELEASE_AUDIT.md) for commit and artifact details.
 
 ## Limitations
 

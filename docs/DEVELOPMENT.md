@@ -66,6 +66,8 @@ On Linux, point `CONNECTMAP_TEST_PYTHON` to `.venv/bin/python` and use `npx play
 
 Browser tests launch `scripts/e2e_server.py` with temporary data directories and synthetic visual/editor scenarios. That launcher clears inherited SDEX/application settings and forces Mock Mode. Test servers use loopback ports `8765` and `8766`; those ports must be free. A built frontend is required. Failure traces and generated screenshots may contain test data and are excluded from the source archive.
 
+Editor interactions wait for stable SVG geometry before measuring screen coordinates. The focused cable regression verifies that a plain selection reveals the saved waypoint without inserting or writing a route. Do not replace that synchronization with fixed sleeps or relax the waypoint assertions. For repeated Linux verification, run `npx playwright test --config playwright.editor.config.ts --grep 'selecting a persisted cable' --repeat-each=3` from `frontend/`.
+
 With the compiled frontend available, run `python scripts/source_acceptance.py` using the installed backend environment. It starts disposable Mock Mode processes on a free loopback port and checks HTTP UI, SSE, settings and encryption-key persistence across a process restart. It never uses a saved deployment profile.
 
 ## Dependency updates
@@ -96,3 +98,5 @@ For Docker changes, also run the isolated checks described in [Deployment](DEPLO
 ## CI
 
 The [workflow](../.github/workflows/ci.yml) installs locked dependencies, checks backend/frontend behavior and builds the source. Docker jobs verify the container separately. It grants read-only repository permissions and has no image publication, release, tag or deployment job. Inspect the actual job results after upload; local execution and a valid workflow file are not remote CI results.
+
+Visual and editor suites use separate `test-results/visual` and `test-results/editor` directories. Failed source jobs retain Playwright evidence for 14 days as a workflow artifact; only the browser result directories are uploaded. Native container jobs still require both source platforms and the security job to succeed. The [release audit](../RELEASE_AUDIT.md) records the initial failed workflow and distinguishes it from local remediation results.

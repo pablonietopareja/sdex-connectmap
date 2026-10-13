@@ -6,6 +6,22 @@ const screenshotDirectory = fileURLToPath(
   new URL("../test-artifacts/editor/", import.meta.url),
 );
 
+const editableEdgeId = "visual-link:00000000-0000-4000-8000-000000000011";
+
+async function fitTopology(page: Page) {
+  await page.getByRole("button", { name: "Fit topology" }).click();
+  await page.locator(".react-flow__viewport").evaluate(async (element) => {
+    let previous = element.getAttribute("style");
+    let stableFrames = 0;
+    while (stableFrames < 3) {
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      const current = element.getAttribute("style");
+      stableFrames = current === previous ? stableFrames + 1 : 0;
+      previous = current;
+    }
+  });
+}
+
 async function chooseTheme(page: Page, theme: "Light" | "Dark") {
   await page.getByRole("combobox", { name: "Theme" }).click();
   await page.getByRole("option", { name: theme, exact: true }).click();
@@ -18,31 +34,108 @@ async function enableEditor(page: Page) {
   await expect(editorSwitch).toBeChecked();
 }
 
-async function pointOnPath(path: Locator, fraction = 0.5) {
-  return path.evaluate((element, requestedFraction) => {
-    if (!(element instanceof SVGPathElement)) {
-      throw new Error("Expected an SVG path for cable interaction.");
-    }
-    const matrix = element.getScreenCTM();
-    if (!matrix) throw new Error("The cable path has no screen transform.");
-    const length = element.getTotalLength();
-    const candidates = Array.from(
-      { length: 81 },
-      (_, index) => 0.1 + index * 0.01,
-    ).sort(
-      (left, right) =>
-        Math.abs(left - requestedFraction) -
-        Math.abs(right - requestedFraction),
-    );
-    for (const candidate of candidates) {
-      const point = element.getPointAtLength(length * candidate);
-      const x = matrix.a * point.x + matrix.c * point.y + matrix.e;
-      const y = matrix.b * point.x + matrix.d * point.y + matrix.f;
-      if (document.elementFromPoint(x, y) === element) return { x, y };
-    }
-    throw new Error("No visible, targetable point was found on the cable path.");
-  }, fraction);
+async function pointOnPath(
+  path: Locator,
+  fraction = 0.5,
+): Promise<{ x: number; y: number }> {
+  let result: { x: number; y: number } | null = null;
+  await expect
+    .poll(async () => {
+      result = await path.evaluate(async (element, requestedFraction) => {
+        if (!(element instanceof SVGPathElement)) {
+          throw new Error("Expected an SVG path for cable interaction.");
+        }
+        // Raw mouse coordinates do not get Playwright's actionability checks.
+        // A point measured during Fit topology can miss by click time.
+        const geometry = () => {
+          const matrix = element.getScreenCTM();
+          if (!matrix) throw new Error("The cable path has no screen transform.");
+          return JSON.stringify([
+            element.getAttribute("d"),
+            matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f,
+          ]);
+        };
+        let previous = geometry();
+        let stableFrames = 0;
+        while (stableFrames < 3) {
+          await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+          // React Flow can replace an edge while measuring newly rendered nodes.
+          // Retry the locator instead of measuring a detached path.
+          if (!element.isConnected) return null;
+          const current = geometry();
+          stableFrames = current === previous ? stableFrames + 1 : 0;
+          previous = current;
+        }
+        const matrix = element.getScreenCTM();
+        if (!matrix) throw new Error("The cable path has no screen transform.");
+        const length = element.getTotalLength();
+        const candidates = Array.from(
+          { length: 81 },
+          (_, index) => 0.1 + index * 0.01,
+        ).sort(
+          (left, right) =>
+            Math.abs(left - requestedFraction) -
+            Math.abs(right - requestedFraction),
+        );
+        for (const candidate of candidates) {
+          const point = element.getPointAtLength(length * candidate);
+          const x = matrix.a * point.x + matrix.c * point.y + matrix.e;
+          const y = matrix.b * point.x + matrix.d * point.y + matrix.f;
+          if (document.elementFromPoint(x, y) === element) return { x, y };
+        }
+        return null;
+      }, fraction);
+      return result;
+    }, { message: "The cable path has a stable, visible interaction point." })
+    .not.toBeNull();
+  if (!result) throw new Error("No targetable point was found on the cable path.");
+  return result;
 }
+
+test("selecting a persisted cable after an animated fit reveals its saved waypoint", async ({
+  page,
+}) => {
+  const routeWrites: string[] = [];
+  page.on("request", (request) => {
+    if (
+      request.method() !== "GET" &&
+      new URL(request.url()).pathname.endsWith("/route")
+    ) {
+      routeWrites.push(`${request.method()} ${request.url()}`);
+    }
+  });
+  await page.goto("/");
+  await expect(page.getByTestId("rack-node")).toHaveCount(1);
+  const before = await page.request.get("/api/topology");
+  expect(before.ok()).toBe(true);
+  const initialTopology = await before.json();
+  const savedRoute = initialTopology.visual_topology.routes[editableEdgeId];
+  expect(savedRoute.routing_mode).toBe("manual");
+  expect(savedRoute.waypoints).toHaveLength(1);
+
+  await enableEditor(page);
+  await page.getByRole("button", { name: "Zoom in" }).click();
+  // Start the 450 ms fit and immediately ask for a targetable path point.
+  // This exercises the coordinate helper while the viewport is still moving.
+  await page.getByRole("button", { name: "Fit topology" }).click();
+  const hit = page.getByTestId(`edge-route-hit-${editableEdgeId}`);
+  const point = await pointOnPath(hit, 0.35);
+  await page.mouse.click(point.x, point.y);
+  await expect(hit.locator("..")).toHaveClass(/\bselected\b/);
+  await expect(page.locator(".edge-waypoint")).toHaveCount(1);
+  await expect(
+    page.getByRole("button", { name: "Cable waypoint 1 of 1" }),
+  ).toBeVisible();
+
+  const after = await page.request.get("/api/topology");
+  expect(after.ok()).toBe(true);
+  const selectedTopology = await after.json();
+  expect(selectedTopology.visual_topology.routes[editableEdgeId]).toEqual(savedRoute);
+  expect(selectedTopology.nodes.map((node: { id: string }) => node.id)).toEqual(
+    initialTopology.nodes.map((node: { id: string }) => node.id),
+  );
+  expect(routeWrites).toEqual([]);
+});
 
 async function dragFromLocatorToPoint(
   page: Page,
@@ -182,8 +275,7 @@ test("advanced Editor topology persists without mutating source connections", as
   await expect(page.getByRole("button", { name: "Add Switch" })).toBeVisible();
   await expect(page.locator(".switch-node-card .react-flow__handle-left")).not.toHaveCount(0);
   await expect(page.locator(".switch-node-card .react-flow__handle-right")).not.toHaveCount(0);
-  await page.getByRole("button", { name: "Fit topology" }).click();
-  await page.waitForTimeout(400);
+  await fitTopology(page);
 
   const productionRack = page
     .getByTestId("rack-node")
@@ -283,8 +375,7 @@ test("advanced Editor topology persists without mutating source connections", as
     .getByTestId("switch-node")
     .filter({ hasText: "New Switch" });
   await expect(newSwitch).toHaveCount(1);
-  await page.getByRole("button", { name: "Fit topology" }).click();
-  await page.waitForTimeout(400);
+  await fitTopology(page);
 
   const energyMeter = page
     .getByTestId("connection-node-modbus")
@@ -389,11 +480,7 @@ test("advanced Editor topology persists without mutating source connections", as
         link.id === deviceToSwitchLink.id || link.id === switchToSdexLink.id,
     ),
   ).toBe(false);
-  await page.getByRole("button", { name: "Fit topology" }).click();
-  await page.waitForTimeout(400);
-
-  const editableEdgeId =
-    "visual-link:00000000-0000-4000-8000-000000000011";
+  await fitTopology(page);
   const editableHit = page.getByTestId(`edge-route-hit-${editableEdgeId}`);
   const selectionPoint = await pointOnPath(editableHit, 0.35);
   expect(selectionPoint.x).toBeGreaterThan(0);
@@ -401,6 +488,7 @@ test("advanced Editor topology persists without mutating source connections", as
   expect(selectionPoint.y).toBeGreaterThan(70);
   expect(selectionPoint.y).toBeLessThan(1080);
   await page.mouse.click(selectionPoint.x, selectionPoint.y);
+  await expect(editableHit.locator("..")).toHaveClass(/\bselected\b/);
   await expect(page.locator(".edge-waypoint")).toHaveCount(1);
   const saveResponse = page.waitForResponse(
     (response) =>
@@ -423,8 +511,7 @@ test("advanced Editor topology persists without mutating source connections", as
   await expect(editableHit).toHaveAttribute("d", /^M [^C]+(?: L [^C]+)+$/);
 
   await chooseTheme(page, "Dark");
-  await page.getByRole("button", { name: "Fit topology" }).click();
-  await page.waitForTimeout(500);
+  await fitTopology(page);
   await page.screenshot({
     path: `${screenshotDirectory}/01-overview-dark.png`,
     fullPage: true,
@@ -555,13 +642,13 @@ test("advanced Editor topology persists without mutating source connections", as
   const persistedHit = page.getByTestId(`edge-route-hit-${editableEdgeId}`);
   const persistedPoint = await pointOnPath(persistedHit, 0.35);
   await page.mouse.click(persistedPoint.x, persistedPoint.y);
+  await expect(persistedHit.locator("..")).toHaveClass(/\bselected\b/);
   await expect(page.locator(".edge-waypoint")).toHaveCount(2);
   await expect(page.getByTestId("rack-node")).toHaveCount(1);
   await expect(page.getByTestId("switch-node")).toHaveCount(1);
 
   await chooseTheme(page, "Dark");
-  await page.getByRole("button", { name: "Fit topology" }).click();
-  await page.waitForTimeout(500);
+  await fitTopology(page);
   await page.locator(".react-flow__pane").click({ position: { x: 1870, y: 40 } });
   await page.screenshot({
     path: `${screenshotDirectory}/12-editor-overview-dark.png`,

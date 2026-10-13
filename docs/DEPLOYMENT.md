@@ -88,6 +88,8 @@ python scripts/container_acceptance.py --image sdex-connectmap:1.0.0
 
 These checks use synthetic data. Real SDEX acceptance should separately confirm login, required module reads, TLS identity, manual/scheduled refresh and persisted layout on the intended host. Device connection state alone does not verify every API module or image architecture.
 
+The current packaged context has passed native AMD64 build and isolated container acceptance on Ubuntu 24.04.5. The acceptance script checks the actual loopback binding after restart because Docker may reassign an ephemeral host port; that reassignment does not indicate lost application state. Native ARM64 acceptance and a built-image OS advisory/license scan remain `NOT RUN`. The initial remote workflow's container matrix was skipped after its Linux source failure, so local AMD64 acceptance must not be described as a completed GitHub matrix. Exact image/context identifiers and the observed workflow revision are in the [release audit](../RELEASE_AUDIT.md).
+
 I have tested the application and its features on an ARM-based edgeNode. Changes to the image, dependencies or target environment should still receive their own acceptance check; that field test is not a result for every future build.
 
 ## Troubleshooting

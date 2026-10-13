@@ -7,6 +7,7 @@ const python = process.env.CONNECTMAP_TEST_PYTHON ?? "python";
 export default defineConfig({
   testDir: "./e2e",
   testMatch: "**/visual.e2e.ts",
+  outputDir: "./test-results/visual",
   fullyParallel: false,
   workers: 1,
   timeout: 90_000,

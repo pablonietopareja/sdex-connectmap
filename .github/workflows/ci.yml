@@ -50,11 +50,20 @@ jobs:
       - name: Install test browser
         working-directory: frontend
         run: npx playwright install --with-deps chromium
-      - name: Browser acceptance with disposable Mock Mode
+      - name: Visual browser acceptance with disposable Mock Mode
         working-directory: frontend
-        run: |
-          npm run test:e2e
-          npm run test:e2e:editor
+        run: npm run test:e2e
+      - name: Editor browser acceptance with disposable Mock Mode
+        working-directory: frontend
+        run: npm run test:e2e:editor
+      - name: Retain browser failure evidence
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: playwright-${{ matrix.os }}-${{ github.run_attempt }}
+          path: frontend/test-results/
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Verify and package public source
         run: |
           python scripts/verify_release.py

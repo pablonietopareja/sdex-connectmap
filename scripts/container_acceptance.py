@@ -22,6 +22,12 @@ def docker(*args: str, check: bool = True) -> str:
     return result.stdout.strip()
 
 
+def published_port(name: str) -> int:
+    binding = json.loads(docker("inspect", name))[0]["NetworkSettings"]["Ports"]["8080/tcp"][0]
+    assert binding["HostIp"] == "127.0.0.1"
+    return int(binding["HostPort"])
+
+
 def request(port: int, path: str, payload: dict | None = None, *, text: bool = False):
     body = json.dumps(payload).encode() if payload is not None else None
     origin = f"http://127.0.0.1:{port}"
@@ -80,8 +86,7 @@ def main() -> None:
             "CONNECTMAP_MOCK_SCENARIO=stable",
             args.image,
         )
-        binding = json.loads(docker("inspect", name))[0]["NetworkSettings"]["Ports"]["8080/tcp"][0]
-        port = int(binding["HostPort"])
+        port = published_port(name)
         wait_ready(name, port)
         assert docker("exec", name, "id", "-u") == "10001"
         assert request(port, "/api/config/status")["mock_mode"] is True
@@ -98,6 +103,8 @@ def main() -> None:
             "print(hashlib.sha256(open('/data/.connectmap-key','rb').read()).hexdigest())",
         )
         docker("restart", name)
+        # Docker may allocate a different ephemeral host port when the container restarts.
+        port = published_port(name)
         wait_ready(name, port)
         assert request(port, "/api/settings")["refresh_interval_seconds"] == 600
         assert key_hash == docker(
