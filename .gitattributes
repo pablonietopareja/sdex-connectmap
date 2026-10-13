@@ -1,0 +1,8 @@
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.zip binary
+*.tar binary
+# Preserve the original formatting of these upstream license texts.
+docs/licenses/python/cffi/licenses/LICENSE -whitespace
+docs/licenses/python/pycparser/licenses/LICENSE -whitespace

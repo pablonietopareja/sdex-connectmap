@@ -1,0 +1,121 @@
+name: Source and container checks
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2022]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '22'
+      - name: Install locked Python dependencies
+        run: python -m pip install --require-hashes -r backend/requirements-dev.txt
+      - name: Python source checks
+        working-directory: backend
+        run: |
+          python -m ruff check app tests
+          python -m ruff format --check app tests
+          python -m ruff check --config pyproject.toml ../scripts
+          python -m ruff format --check --config pyproject.toml ../scripts
+      - name: Backend synthetic tests
+        working-directory: backend
+        run: python -m pytest -q
+      - name: Install locked frontend dependencies
+        working-directory: frontend
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Frontend lint, tests and build
+        working-directory: frontend
+        run: |
+          npm run lint
+          npm test
+          npm run build
+      - name: Isolated source startup and persistence
+        run: python scripts/source_acceptance.py
+      - name: Install test browser
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: Browser acceptance with disposable Mock Mode
+        working-directory: frontend
+        run: |
+          npm run test:e2e
+          npm run test:e2e:editor
+      - name: Verify and package public source
+        run: |
+          python scripts/verify_release.py
+          python scripts/build_release.py
+
+  security:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '22'
+      - name: Dependency and static security checks
+        run: |
+          python -m pip install pip-audit==2.10.1 bandit==1.9.4
+          python -m pip_audit -r backend/requirements.txt --no-deps --disable-pip
+          python -m bandit -r backend/app -ll
+          npm --prefix frontend ci --ignore-scripts --no-audit --no-fund
+          npm --prefix frontend audit --audit-level=low
+      - name: Download checksum-verified Gitleaks
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          curl -fsSLO https://github.com/gitleaks/gitleaks/releases/download/v8.30.0/gitleaks_8.30.0_linux_x64.tar.gz
+          curl -fsSLO https://github.com/gitleaks/gitleaks/releases/download/v8.30.0/gitleaks_8.30.0_checksums.txt
+          grep '  gitleaks_8.30.0_linux_x64.tar.gz$' gitleaks_8.30.0_checksums.txt | sha256sum --check
+          tar -xzf gitleaks_8.30.0_linux_x64.tar.gz gitleaks
+      - name: Scan exactly the public archive contents
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/build_release.py
+          python -m zipfile -e dist/sdex-connectmap-1.0.0-source.zip "$RUNNER_TEMP/connectmap-public"
+          "$RUNNER_TEMP/gitleaks" dir "$RUNNER_TEMP/connectmap-public" --redact --no-banner
+
+  container:
+    needs: [source, security]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Validate deployment definitions
+        run: |
+          docker compose config --quiet
+          docker compose -f portainer-stack.yml config --quiet
+      - name: Build the packaged Docker context natively
+        run: |
+          python scripts/build_release.py
+          docker build -t sdex-connectmap:ci - < dist/sdex-connectmap-1.0.0-build-context.tar
+      - name: Disposable container acceptance
+        run: python scripts/container_acceptance.py --image sdex-connectmap:ci

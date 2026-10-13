@@ -1,0 +1,31 @@
+# Deployment settings and persistent state
+.env
+.env.*
+!.env.example
+.connectmap-data/
+data/
+*.db*
+*.sqlite*
+.connectmap-key
+*.pem
+*.crt
+*.key
+*.log
+
+# Installed dependencies and generated outputs
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+frontend/test-results/
+frontend/test-artifacts/
+frontend/playwright-report/
+artifacts/

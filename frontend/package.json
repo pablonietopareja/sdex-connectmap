@@ -1,0 +1,44 @@
+{
+  "name": "sdex-connectmap-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc -b && vite build",
+    "lint": "eslint . --max-warnings 0",
+    "test": "vitest run --maxWorkers=1 --no-file-parallelism",
+    "test:e2e": "playwright test",
+    "test:e2e:editor": "playwright test --config playwright.editor.config.ts",
+    "test:watch": "vitest",
+    "preview": "vite preview --host 0.0.0.0"
+  },
+  "dependencies": {
+    "@xyflow/react": "12.8.5",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@playwright/test": "1.61.1",
+    "@testing-library/jest-dom": "6.6.3",
+    "@testing-library/react": "16.1.0",
+    "@testing-library/user-event": "14.5.2",
+    "@types/node": "22.10.2",
+    "@types/react": "18.3.18",
+    "@types/react-dom": "18.3.5",
+    "@vitejs/plugin-react": "4.7.0",
+    "eslint": "9.39.5",
+    "eslint-plugin-react-hooks": "5.1.0",
+    "eslint-plugin-react-refresh": "0.4.16",
+    "globals": "15.14.0",
+    "jsdom": "25.0.1",
+    "typescript": "5.7.2",
+    "typescript-eslint": "8.71.2",
+    "vite": "6.4.4",
+    "vitest": "4.1.11"
+  },
+  "engines": {
+    "node": "^20.19.0 || ^22.0.0 || >=24.0.0"
+  }
+}

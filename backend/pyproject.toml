@@ -1,0 +1,24 @@
+[tool.pytest.ini_options]
+addopts = "-ra -p no:cacheprovider"
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["."]
+norecursedirs = [".*", "__pycache__", "pytest-cache-files-*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = [
+    ".venv",
+    ".pytest_cache",
+    ".ruff_cache",
+    "__pycache__",
+    "pytest-cache-files-*",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "ASYNC", "S"]
+ignore = ["B008", "S101"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S105", "S106", "S108"]
