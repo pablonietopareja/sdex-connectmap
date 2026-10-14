@@ -1,7 +1,7 @@
-# Build sdex-connectmap:1.0.0 on the target environment before deploying.
+# Build sdex-connectmap:1.0.1 on the target environment before deploying.
 services:
   connectmap:
-    image: ${CONNECTMAP_IMAGE:-sdex-connectmap:1.0.0}
+    image: ${CONNECTMAP_IMAGE:-sdex-connectmap:1.0.1}
     restart: unless-stopped
     ports:
       - "${CONNECTMAP_BIND_ADDRESS:-127.0.0.1}:${CONNECTMAP_HOST_PORT:-8080}:8080"

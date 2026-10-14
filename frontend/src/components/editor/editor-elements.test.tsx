@@ -256,6 +256,65 @@ describe("Switch presentation", () => {
 });
 
 describe("visual element property panels", () => {
+  it("preserves a Rack draft when live topology updates only its aggregate or position", async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    const callbacks = {
+      onClose: vi.fn(),
+      onSave,
+      onUngroupAll: vi.fn().mockResolvedValue(undefined),
+      onDelete: vi.fn().mockResolvedValue(undefined),
+    };
+    const { rerender } = render(
+      <RackPropertiesPanel rack={rack()} {...callbacks} />,
+    );
+    fireEvent.change(screen.getByLabelText("Rows"), { target: { value: "2" } });
+    fireEvent.change(screen.getByLabelText("Columns"), { target: { value: "2" } });
+
+    rerender(
+      <RackPropertiesPanel
+        rack={rack({
+          position: { x: 100, y: 200 },
+          aggregate: {
+            status: "connected", total: 2, connected: 2,
+            disconnected: 0, disabled: 0, unknown: 0,
+          },
+        })}
+        {...callbacks}
+      />,
+    );
+    expect(screen.getByLabelText("Rows")).toHaveValue(2);
+    expect(screen.getByLabelText("Columns")).toHaveValue(2);
+    fireEvent.click(screen.getByRole("button", { name: "Save Rack" }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledWith(
+      "rack-1",
+      expect.objectContaining({ rows: 2, columns: 2 }),
+      { expelOverflow: false },
+    ));
+  });
+
+  it("loads persisted Rack dimensions and a different Rack when the selected element changes", () => {
+    const callbacks = {
+      onClose: vi.fn(),
+      onSave: vi.fn().mockResolvedValue(undefined),
+      onUngroupAll: vi.fn().mockResolvedValue(undefined),
+      onDelete: vi.fn().mockResolvedValue(undefined),
+    };
+    const { rerender } = render(
+      <RackPropertiesPanel rack={rack()} {...callbacks} />,
+    );
+    rerender(
+      <RackPropertiesPanel rack={rack({ rows: 2, columns: 2 })} {...callbacks} />,
+    );
+    expect(screen.getByLabelText("Rows")).toHaveValue(2);
+    expect(screen.getByLabelText("Columns")).toHaveValue(2);
+    fireEvent.change(screen.getByLabelText("Rows"), { target: { value: "3" } });
+    rerender(
+      <RackPropertiesPanel rack={rack({ id: "rack-2", rows: 1, columns: 2 })} {...callbacks} />,
+    );
+    expect(screen.getByLabelText("Rows")).toHaveValue(1);
+    expect(screen.getByLabelText("Columns")).toHaveValue(2);
+  });
+
   it("requires confirmation and expels overflow when shrinking an occupied Rack", async () => {
     const user = userEvent.setup();
     const onSave = vi.fn().mockResolvedValue(undefined);

@@ -1,6 +1,6 @@
 services:
   connectmap:
-    image: ${CONNECTMAP_IMAGE:-sdex-connectmap:1.0.0}
+    image: ${CONNECTMAP_IMAGE:-sdex-connectmap:1.0.1}
     build:
       context: .
       dockerfile: Dockerfile

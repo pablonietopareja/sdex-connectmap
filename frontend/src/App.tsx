@@ -173,6 +173,7 @@ export default function App() {
   const { preference: theme, setPreference: setTheme } = useTheme();
   const refreshPollTimer = useRef<number | null>(null);
   const refreshPollGeneration = useRef(0);
+  const topologyRequestGeneration = useRef(0);
   const historyError = useCallback((error: unknown) => {
     setNotification(
       friendlyError(error, "The visual editor operation could not be restored."),
@@ -191,7 +192,12 @@ export default function App() {
   });
 
   const loadTopology = useCallback(async (signal?: AbortSignal) => {
+    const generation = ++topologyRequestGeneration.current;
     const next = await api.getTopology(signal);
+    // An older refresh must not overwrite a snapshot loaded after a local edit.
+    if (signal?.aborted || generation !== topologyRequestGeneration.current) {
+      return null;
+    }
     setSnapshot(next);
     setSelectedNode((selected) => {
       if (!selected) return null;
@@ -275,7 +281,7 @@ export default function App() {
       if (generation !== refreshPollGeneration.current) return;
       try {
         const next = await loadTopology();
-        if (!next.refresh_in_progress) {
+        if (next && !next.refresh_in_progress) {
           cancelRefreshPolling();
           return;
         }
@@ -321,7 +327,7 @@ export default function App() {
       ) {
         void loadTopology()
           .then((next) => {
-            if (!next.refresh_in_progress) cancelRefreshPolling();
+            if (next && !next.refresh_in_progress) cancelRefreshPolling();
           })
           .catch((error) =>
             setNotification(

@@ -52,6 +52,10 @@ A successful snapshot is saved with stable IDs and joined to existing layout and
 
 The event endpoint `/api/events` sends completion notifications and 15-second heartbeats. The UI then fetches the shared topology; it does not receive credentials or raw SDEX session material. EventSource reconnects after interruption, and subscriber queues are removed when streams close. No cross-process event broker exists.
 
+The browser applies only the current topology request's result. Responses from superseded or aborted requests cannot overwrite a newer snapshot after an edit or clear newer refresh state through polling/event callbacks. Rack properties retain unsaved editable fields when refreshes change only aggregate status or position; changed persisted editable fields still update the form.
+
+Mock Mode selects a synthetic client independently of saved real credentials. Its status text describes demo readiness, unavailable demo data or cached demo data, alongside the Mock Mode indicator. Real-mode status text continues to describe SDEX connectivity. The labels do not alter the underlying status calculations, partial-discovery flags or alarms.
+
 ## Read-only integration
 
 The adapters read configured S7, Rockwell, Modbus, SINUMERIK, Fanuc, OPC UA and MQTT objects. The optional interface read supports `eth1`/`eth2` assignment. Authentication needs POSTs; discovery uses GETs. No SDEX mutation endpoint is proxied through ConnectMap.

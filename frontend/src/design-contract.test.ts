@@ -7,7 +7,8 @@ describe("static visual contract", () => {
     expect(indexHtml).toContain(
       '<link rel="icon" type="image/svg+xml" href="/icons/SDEX_ConnectMap_logo.svg" />',
     );
-    expect(indexHtml).toContain("<title>SDEX ConnectMap – by Pablo</title>");
+    expect(indexHtml).toContain("<title>SDEX ConnectMap</title>");
+    expect(indexHtml).not.toContain("by Pablo");
   });
 
   it("keeps the exact doubled cable widths in central tokens", () => {

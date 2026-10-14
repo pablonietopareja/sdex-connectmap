@@ -29,6 +29,15 @@ const gatewayStatusCopy: Record<ConnectionStatus, string> = {
   unknown: "SDEX status unknown",
 };
 
+const demoStatusCopy: Record<ConnectionStatus, string> = {
+  connected: "Demo data ready",
+  disconnected: "Demo data unavailable",
+  disabled: "Demo data disabled",
+  unlicensed: "Demo license issue",
+  degraded: "Demo data degraded",
+  unknown: "Demo data status unknown",
+};
+
 function ThemeIcon({ preference }: { preference: ThemePreference }) {
   if (preference === "light") return <SunIcon />;
   if (preference === "dark") return <MoonIcon />;
@@ -162,8 +171,10 @@ export function TopBar({
   });
   const updated = formatTimestamp(snapshot.last_successful_refresh);
   const statusCopy = snapshot.stale
-    ? "Showing cached data"
-    : gatewayStatusCopy[status];
+    ? snapshot.mock_mode
+      ? "Showing cached demo data"
+      : "Showing cached data"
+    : (snapshot.mock_mode ? demoStatusCopy : gatewayStatusCopy)[status];
 
   return (
     <header className="top-bar">
@@ -176,7 +187,6 @@ export function TopBar({
         />
         <div>
           <strong>SDEX ConnectMap</strong>
-          <span>by Pablo</span>
         </div>
       </div>
 

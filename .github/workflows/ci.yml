@@ -101,7 +101,8 @@ jobs:
         run: |
           set -euo pipefail
           python scripts/build_release.py
-          python -m zipfile -e dist/sdex-connectmap-1.0.0-source.zip "$RUNNER_TEMP/connectmap-public"
+          version="$(cat VERSION)"
+          python -m zipfile -e "dist/sdex-connectmap-${version}-source.zip" "$RUNNER_TEMP/connectmap-public"
           "$RUNNER_TEMP/gitleaks" dir "$RUNNER_TEMP/connectmap-public" --redact --no-banner
 
   container:
@@ -125,6 +126,59 @@ jobs:
       - name: Build the packaged Docker context natively
         run: |
           python scripts/build_release.py
-          docker build -t sdex-connectmap:ci - < dist/sdex-connectmap-1.0.0-build-context.tar
+          version="$(cat VERSION)"
+          docker build -t sdex-connectmap:ci - < "dist/sdex-connectmap-${version}-build-context.tar"
       - name: Disposable container acceptance
         run: python scripts/container_acceptance.py --image sdex-connectmap:ci
+      - name: Download checksum-pinned image scanner
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "$(uname -m)" in
+            x86_64)
+              archive=trivy_0.75.0_Linux-64bit.tar.gz
+              checksum=c6e65abddb348e25f10549df887045629cf28cc72453cd1c63acb717316b3f3f
+              ;;
+            aarch64|arm64)
+              archive=trivy_0.75.0_Linux-ARM64.tar.gz
+              checksum=a1ee9f6ffb7d112b64ff726a2a0717c21175c1114361391f4a132956751a13b3
+              ;;
+            *) echo "Unsupported scanner architecture" >&2; exit 1 ;;
+          esac
+          mkdir -p "$RUNNER_TEMP/connectmap-trivy"
+          cd "$RUNNER_TEMP/connectmap-trivy"
+          curl -fsSL "https://github.com/aquasecurity/trivy/releases/download/v0.75.0/$archive" -o "$archive"
+          printf '%s  %s\n' "$checksum" "$archive" | sha256sum --check
+          tar -xzf "$archive" trivy
+      - name: Image advisory and license inventory (informational findings)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/image_security_report.py \
+            --image sdex-connectmap:ci \
+            --output "$RUNNER_TEMP/connectmap-image-review" \
+            --cache-dir "$RUNNER_TEMP/connectmap-trivy-cache" \
+            --trivy "$RUNNER_TEMP/connectmap-trivy/trivy"
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          report = json.loads((Path(os.environ['RUNNER_TEMP']) / 'connectmap-image-review/report.json').read_text())
+          gate = report['high_critical_gate']
+          with Path(os.environ['GITHUB_STEP_SUMMARY']).open('a', encoding='utf-8') as summary:
+              summary.write(f"Image scan execution: {report['scan_execution']}\n\n")
+              summary.write(f"HIGH/CRITICAL vulnerability gate: **{gate['status']}** "
+                            f"({gate['package_advisory_pairs']} package/advisory pairs; "
+                            f"{gate['unique_cves']} unique CVEs).\n\n")
+              summary.write("Findings are informational and require release review. "
+                            "A successful job is not vulnerability clearance. "
+                            "Scanner execution or inconsistent evidence errors fail the job.\n")
+          PY
+      - name: Retain complete image review evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: image-review-${{ matrix.os }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/connectmap-image-review/
+          if-no-files-found: warn
+          retention-days: 14

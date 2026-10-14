@@ -20,6 +20,8 @@ The host port is published to `127.0.0.1:8080` by default. To connect from anoth
 
 The runtime uses UID/GID `10001`, a read-only root filesystem, dropped capabilities, `no-new-privileges`, a writable `/data` volume and an ephemeral `/tmp` mount. When using a bind mount instead of the named volume, grant the runtime UID access without making the data directory world-writable.
 
+The final stage uses pinned Python 3.12 on Debian Trixie and applies available updates from that release's package repositories. The wheel builder remains on Bookworm. `pip` installs the locked application wheels during the build, then `pip` and `ensurepip` are removed from the runtime. Later repository updates can change rebuilt OS packages, so record the actual image ID and scan each distributed build.
+
 ## Portainer and edgeNode
 
 Choose the target Docker environment in Portainer. Build the container for that environment's architecture: an image built on a Windows AMD64 workstation is not automatically an ARM64 image suitable for an edge gateway.
@@ -35,13 +37,13 @@ python scripts/build_release.py
 
 The packaging script creates:
 
-- `dist/sdex-connectmap-1.0.0-source.zip` — complete redistributable source tree and documentation.
-- `dist/sdex-connectmap-1.0.0-build-context.tar` — input source context for a Docker build.
+- `dist/sdex-connectmap-1.0.1-source.zip` — complete redistributable source tree and documentation.
+- `dist/sdex-connectmap-1.0.1-build-context.tar` — input source context for a Docker build.
 
 In Portainer:
 
 1. Open **Images > Build a new image > Upload** for the target Docker environment.
-2. Upload the **build-context TAR**, tag it `sdex-connectmap:1.0.0` and set the Dockerfile path to `Dockerfile`.
+2. Upload the **build-context TAR**, tag it `sdex-connectmap:1.0.1` and set the Dockerfile path to `Dockerfile`.
 3. Build the image. Access to base-image/package registries is required during the build.
 4. Open **Stacks > Add stack** and use [portainer-stack.yml](../portainer-stack.yml).
 5. Configure relevant variables, network access and host publication. When using a locally built image, avoid forcing a registry pull.
@@ -55,9 +57,9 @@ Use an SDEX origin that resolves and is reachable **from inside the ConnectMap c
 
 ConnectMap reads supported SDEX modules and system/network data. Its authentication POST requests are limited to login, session refresh and logout. Rack, Switch and cable changes are local visual edits and do not configure industrial devices.
 
-## Verified container acceptance
+## Container acceptance and qualification
 
-The [GitHub Actions run #38408177090](https://github.com/pablonietopareja/sdex-connectmap/actions/runs/38408177090), for commit `2ce9fac20c9adb36087a779f636bc62f72cee8d0`, passed **native AMD64 and ARM64** container jobs. Each job:
+The 1.0.0 baseline commit `90f89c0d91c57475dd9a893530b167481a07b1f0` passed native AMD64 and ARM64 container jobs in [run #38412311674, attempt 2](https://github.com/pablonietopareja/sdex-connectmap/actions/runs/38412311674/attempts/2). Attempt 1 failed a Linux editor browser test before the dependent container jobs; the rerun passed without a source change. This is historical baseline evidence, not acceptance of the changed 1.0.1 candidate. Each successful baseline container job:
 
 - Validated `compose.yaml` and `portainer-stack.yml` with Docker Compose.
 - Built the exact packaged Docker context on its Linux architecture.
@@ -65,20 +67,24 @@ The [GitHub Actions run #38408177090](https://github.com/pablonietopareja/sdex-c
 - Verified the HTTP UI/API, `/api/health`, non-root UID `10001` and persisted settings/credential key after restart.
 - Confirmed the random published test port stayed bound to loopback, including after restart.
 
-This verifies the image build and its core runtime behavior on the two tested runner architectures. It **does not** verify real SDEX connectivity, a particular Raspberry Pi OS or edgeNode firmware release, production network routes or a full OS vulnerability/license scan.
+Those checks verified the baseline image's core runtime behavior on the two runner architectures. The 1.0.1 candidate passed local native AMD64 build and disposable acceptance on Ubuntu 24.04; new native ARM64 acceptance and remote CI remain pending. Current acceptance also inspects the read-only root, dropped capabilities, restricted mounts and decrypted synthetic profile after restart. Synthetic acceptance does not verify real SDEX connectivity, a particular Raspberry Pi OS or edgeNode firmware release, production network routes or a full OS vulnerability/license scan.
 
-I have also operated ConnectMap on Raspberry Pi and edgeNode with a real SDEX API. Those are **maintainer-reported field tests**, separate from the automated synthetic CI results. The exact public build still requires site-specific acceptance before production deployment.
+The refreshed Bookworm scan retained 55 HIGH/CRITICAL package/advisory pairs. The measured Trixie comparison reduced this to 44 HIGH pairs across eight CVEs, with no CRITICAL or pip findings; its HIGH/CRITICAL gate still **FAILS**. Review the [image comparison and residual triage](../RELEASE_AUDIT.md#image-scan-findings) before distributing a built image. Passing health, persistence or CI job checks does not clear those advisories.
+
+Maintainer field testing on Raspberry Pi and edgeNode with a real SDEX API is separate from candidate validation and automated synthetic tests. Perform site-specific acceptance for the image and environment being deployed. The [release audit](../RELEASE_AUDIT.md) records current local checks and pending remote CI.
 
 For a local repetition on a Docker-capable host:
 
 ```powershell
 docker compose config --quiet
 docker compose -f portainer-stack.yml config --quiet
-docker build --tag sdex-connectmap:1.0.0 .
-python scripts/container_acceptance.py --image sdex-connectmap:1.0.0
+docker build --tag sdex-connectmap:1.0.1 .
+python scripts/container_acceptance.py --image sdex-connectmap:1.0.1
 ```
 
 The acceptance script uses a disposable container/volume. Do not point it at operational SDEX data.
+
+CI additionally scans each native build with checksum-verified Trivy 0.75.0. It retains complete vulnerability/license reports and the separate HIGH/CRITICAL gate as 14-day workflow artifacts. Findings are informational rather than an automatic policy exemption: successful jobs still require release review, and scanner operational errors fail the job. The formal release remains on HOLD until residual risk is accepted and the final candidate and audit revision pass CI.
 
 ## Reverse proxy and access control
 
@@ -103,6 +109,8 @@ Upgrade steps:
 5. Verify health, SDEX access, snapshot freshness, and persisted layout/editor state.
 
 Supported database migrations run on startup. Downgrades are not guaranteed. Recover the pre-upgrade backup and matching image rather than deleting operational state.
+
+For a source-level compatibility check using an actual 1.0.0 baseline and synthetic data, see [Upgrade acceptance](DEVELOPMENT.md#upgrade-acceptance). That check does not replace acceptance of the built image on the deployment host.
 
 ## Troubleshooting
 

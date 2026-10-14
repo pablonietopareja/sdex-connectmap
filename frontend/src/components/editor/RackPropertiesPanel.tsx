@@ -53,18 +53,25 @@ export function RackPropertiesPanel({
   const [confirmShrink, setConfirmShrink] = useState(false);
   const [confirmUngroup, setConfirmUngroup] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const rackId = rack?.id;
+  const savedName = rack?.name ?? "";
+  const savedRows = rack?.rows ?? 1;
+  const savedColumns = rack?.columns ?? 3;
+  const savedInterface = rack?.external_interface ?? null;
 
   useEffect(() => {
-    if (!rack) return;
-    setName(rack.name);
-    setRows(rack.rows);
-    setColumns(rack.columns);
-    setExternalInterface(rack.external_interface);
+    if (!rackId) return;
+    // Live aggregate/position updates create a new Rack object without changing
+    // its editable properties. Keep the draft intact across those updates.
+    setName(savedName);
+    setRows(savedRows);
+    setColumns(savedColumns);
+    setExternalInterface(savedInterface);
     setError(null);
     setConfirmShrink(false);
     setConfirmUngroup(false);
     setConfirmDelete(false);
-  }, [rack]);
+  }, [rackId, savedName, savedRows, savedColumns, savedInterface]);
 
   useEffect(() => {
     if (!rack) return undefined;

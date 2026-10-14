@@ -27,7 +27,7 @@ Boolean values accept `true/false`, `1/0`, `yes/no` or `on/off`. Invalid support
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `CONNECTMAP_IMAGE` | `sdex-connectmap:1.0.0` | Local image name/tag |
+| `CONNECTMAP_IMAGE` | `sdex-connectmap:1.0.1` | Local image name/tag |
 | `CONNECTMAP_BIND_ADDRESS` | `127.0.0.1` | Host address receiving the published port |
 | `CONNECTMAP_HOST_PORT` | `8080` | Host HTTP port mapped to container port 8080 |
 

@@ -2,68 +2,30 @@
   "$schema": "http://cyclonedx.org/schema/bom-1.5.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:8657fe0e-7b8b-49e4-bbb1-cbbf4f6c4e27",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-10-13T11:03:57.639Z",
-    "lifecycles": [
-      {
-        "phase": "build"
-      }
-    ],
     "tools": [
       {
-        "vendor": "npm",
-        "name": "cli",
-        "version": "11.16.0"
+        "vendor": "SDEX ConnectMap",
+        "name": "build_frontend_sbom.py"
       }
     ],
     "component": {
-      "bom-ref": "sdex-connectmap-frontend@1.0.0",
-      "type": "library",
-      "name": "frontend",
-      "version": "1.0.0",
-      "scope": "required",
-      "purl": "pkg:npm/sdex-connectmap-frontend@1.0.0",
-      "properties": [
-        {
-          "name": "cdx:npm:package:private",
-          "value": "true"
-        }
-      ],
-      "externalReferences": []
+      "type": "application",
+      "bom-ref": "sdex-connectmap-frontend@1.0.1",
+      "name": "sdex-connectmap-frontend",
+      "version": "1.0.1",
+      "purl": "pkg:npm/sdex-connectmap-frontend@1.0.1"
     }
   },
   "components": [
     {
-      "bom-ref": "@types/d3-color@3.1.3",
       "type": "library",
+      "bom-ref": "@types/d3-color@3.1.3",
       "name": "@types/d3-color",
       "version": "3.1.3",
       "scope": "required",
-      "description": "TypeScript definitions for d3-color",
       "purl": "pkg:npm/%40types/d3-color@3.1.3",
-      "properties": [],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/@types/d3-color/-/d3-color-3.1.3.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/d3-color"
-        }
-      ],
-      "hashes": [
-        {
-          "alg": "SHA-512",
-          "content": "88ef74b1cb61f5601b9a0bfba20a2ae7b3bd6292a61416e6a04a021c3076c4c058d3efca56ba806820f2084d7a754b2978ebc8c4515123ed2c12da83ab2d9be0"
-        }
-      ],
       "licenses": [
         {
           "license": {
@@ -73,34 +35,12 @@
       ]
     },
     {
-      "bom-ref": "@types/d3-drag@3.0.7",
       "type": "library",
+      "bom-ref": "@types/d3-drag@3.0.7",
       "name": "@types/d3-drag",
       "version": "3.0.7",
       "scope": "required",
-      "description": "TypeScript definitions for d3-drag",
       "purl": "pkg:npm/%40types/d3-drag@3.0.7",
-      "properties": [],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/@types/d3-drag/-/d3-drag-3.0.7.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/d3-drag"
-        }
-      ],
-      "hashes": [
-        {
-          "alg": "SHA-512",
-          "content": "1c4de354a97353d01a31accdb9fa28449e59a5698b22873dd00dfb594d893267aadbcc35150a8266cc07677c51f92bb161fb731eae9653a2891efab12b34f1c5"
-        }
-      ],
       "licenses": [
         {
           "license": {
@@ -110,34 +50,12 @@
       ]
     },
     {
-      "bom-ref": "@types/d3-interpolate@3.0.4",
       "type": "library",
+      "bom-ref": "@types/d3-interpolate@3.0.4",
       "name": "@types/d3-interpolate",
       "version": "3.0.4",
       "scope": "required",
-      "description": "TypeScript definitions for d3-interpolate",
       "purl": "pkg:npm/%40types/d3-interpolate@3.0.4",
-      "properties": [],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/@types/d3-interpolate/-/d3-interpolate-3.0.4.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/d3-interpolate"
-        }
-      ],
-      "hashes": [
-        {
-          "alg": "SHA-512",
-          "content": "9a02cf11396ba55575611248825af8133e3b83b6318e5d658fb60ab223026f6ed5247f56f0d54ce816fd77c924a46fee0104b90266c0e3cab6200a2528aa3530"
-        }
-      ],
       "licenses": [
         {
           "license": {
@@ -147,34 +65,12 @@
       ]
     },
     {
-      "bom-ref": "@types/d3-selection@3.0.11",
       "type": "library",
+      "bom-ref": "@types/d3-selection@3.0.11",
       "name": "@types/d3-selection",
       "version": "3.0.11",
       "scope": "required",
-      "description": "TypeScript definitions for d3-selection",
       "purl": "pkg:npm/%40types/d3-selection@3.0.11",
-      "properties": [],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/@types/d3-selection/-/d3-selection-3.0.11.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/d3-selection"
-        }
-      ],
-      "hashes": [
-        {
-          "alg": "SHA-512",
-          "content": "6e1017bb6dc3256b2b238e7169f629910e0db5c28cc169c00bfbcaaddda5fa7c4c16ebce4f75cc613223da8a6ff2fabc00ee5887b41a73f9d278fff7ce34cad3"
-        }
-      ],
       "licenses": [
         {
           "license": {
@@ -184,34 +80,12 @@
       ]
     },
     {
-      "bom-ref": "@types/d3-transition@3.0.9",
       "type": "library",
+      "bom-ref": "@types/d3-transition@3.0.9",
       "name": "@types/d3-transition",
       "version": "3.0.9",
       "scope": "required",
-      "description": "TypeScript definitions for d3-transition",
       "purl": "pkg:npm/%40types/d3-transition@3.0.9",
-      "properties": [],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/@types/d3-transition/-/d3-transition-3.0.9.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/d3-transition"
-        }
-      ],
-      "hashes": [
-        {
-          "alg": "SHA-512",
-          "content": "b994b9b217f1ccedeb1a5bb4702ddb8e63052ac5eff9299965c829d0a0f6dadb38b865e9e445581b3bbfd1877065e2a675d85c01c718b511092a43df5e466e0a"
-        }
-      ],
       "licenses": [
         {
           "license": {
@@ -221,34 +95,12 @@
       ]
     },
     {
-      "bom-ref": "@types/d3-zoom@3.0.8",
       "type": "library",
+      "bom-ref": "@types/d3-zoom@3.0.8",
       "name": "@types/d3-zoom",
       "version": "3.0.8",
       "scope": "required",
-      "description": "TypeScript definitions for d3-zoom",
       "purl": "pkg:npm/%40types/d3-zoom@3.0.8",
-      "properties": [],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/@types/d3-zoom/-/d3-zoom-3.0.8.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/d3-zoom"
-        }
-      ],
-      "hashes": [
-        {
-          "alg": "SHA-512",
-          "content": "8aa302e3f6251424a53bcfb6222d461869620806385dd786ef8f30e6f4146debe56c3bb4cd28c7ffe8e88e8ad05412bfb1ed23e8350534f0464aa0f76166270f"
-        }
-      ],
       "licenses": [
         {
           "license": {
@@ -258,38 +110,42 @@
       ]
     },
     {
-      "bom-ref": "@xyflow/react@12.8.5",
       "type": "library",
+      "bom-ref": "@types/prop-types@15.7.15",
+      "name": "@types/prop-types",
+      "version": "15.7.15",
+      "scope": "required",
+      "purl": "pkg:npm/%40types/prop-types@15.7.15",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "@types/react@18.3.18",
+      "name": "@types/react",
+      "version": "18.3.18",
+      "scope": "required",
+      "purl": "pkg:npm/%40types/react@18.3.18",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "@xyflow/react@12.8.5",
       "name": "@xyflow/react",
       "version": "12.8.5",
       "scope": "required",
-      "description": "React Flow - A highly customizable React library for building node-based editors and interactive flow charts.",
       "purl": "pkg:npm/%40xyflow/react@12.8.5",
-      "properties": [],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/@xyflow/react/-/react-12.8.5.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "https://github.com/xyflow/xyflow.git"
-        },
-        {
-          "type": "website",
-          "url": "https://reactflow.dev"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/xyflow/xyflow/issues"
-        }
-      ],
-      "hashes": [
-        {
-          "alg": "SHA-512",
-          "content": "351c1c13c404edd87a05b6884fb1a635c70feff44c0d924e2adccae07430e7df5301fcc2f1ee44ff3c3feccc2da6749b6e4a8161cfa36723a2b1de7bb29fe13d"
-        }
-      ],
       "licenses": [
         {
           "license": {
@@ -299,30 +155,12 @@
       ]
     },
     {
-      "bom-ref": "@xyflow/system@0.0.69",
       "type": "library",
+      "bom-ref": "@xyflow/system@0.0.69",
       "name": "@xyflow/system",
       "version": "0.0.69",
       "scope": "required",
-      "description": "xyflow core system that powers React Flow and Svelte Flow.",
       "purl": "pkg:npm/%40xyflow/system@0.0.69",
-      "properties": [],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/@xyflow/system/-/system-0.0.69.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "https://github.com/xyflow/xyflow.git"
-        }
-      ],
-      "hashes": [
-        {
-          "alg": "SHA-512",
-          "content": "f8a6301c39ec6a9650d714a0b18c0e29837dddf511efbd0bc1f093e6aaef726ce831a69b3b5ac76bab7088493b13955421c79672217cba481fabd242f370798d"
-        }
-      ],
       "licenses": [
         {
           "license": {
@@ -332,27 +170,12 @@
       ]
     },
     {
-      "bom-ref": "classcat@5.0.5",
       "type": "library",
+      "bom-ref": "classcat@5.0.5",
       "name": "classcat",
       "version": "5.0.5",
       "scope": "required",
-      "author": "Jorge Bucaran",
-      "description": "Build a class attribute string quickly.",
       "purl": "pkg:npm/classcat@5.0.5",
-      "properties": [],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/classcat/-/classcat-5.0.5.tgz"
-        }
-      ],
-      "hashes": [
-        {
-          "alg": "SHA-512",
-          "content": "2616544fb245710cbf1335bad3993f92d1ed9dca28f6f9f25bfd86b29358c0594dd42fd69a3b95ff1b52d387bd48e90bdac4ddc3454067650609c43d951ea9eb"
-        }
-      ],
       "licenses": [
         {
           "license": {
@@ -362,35 +185,27 @@
       ]
     },
     {
-      "bom-ref": "d3-color@3.1.0",
       "type": "library",
+      "bom-ref": "csstype@3.2.3",
+      "name": "csstype",
+      "version": "3.2.3",
+      "scope": "required",
+      "purl": "pkg:npm/csstype@3.2.3",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "d3-color@3.1.0",
       "name": "d3-color",
       "version": "3.1.0",
       "scope": "required",
-      "author": "Mike Bostock",
-      "description": "Color spaces! RGB, HSL, Cubehelix, Lab and HCL (Lch).",
       "purl": "pkg:npm/d3-color@3.1.0",
-      "properties": [],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/d3-color/-/d3-color-3.1.0.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "https://github.com/d3/d3-color.git"
-        },
-        {
-          "type": "website",
-          "url": "https://d3js.org/d3-color/"
-        }
-      ],
-      "hashes": [
-        {
-          "alg": "SHA-512",
-          "content": "ce0fdc85b5f2781b4c4352db0ff592a16d83a42dc8d26a663dd5beca74538ffc760c0598ac863ba9e6481e2768cf0576e26e226afaf5e653702302f14663b184"
-        }
-      ],
       "licenses": [
         {
           "license": {
@@ -400,35 +215,12 @@
       ]
     },
     {
-      "bom-ref": "d3-dispatch@3.0.1",
       "type": "library",
+      "bom-ref": "d3-dispatch@3.0.1",
       "name": "d3-dispatch",
       "version": "3.0.1",
       "scope": "required",
-      "author": "Mike Bostock",
-      "description": "Register named callbacks and call them with arguments.",
       "purl": "pkg:npm/d3-dispatch@3.0.1",
-      "properties": [],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/d3-dispatch/-/d3-dispatch-3.0.1.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "https://github.com/d3/d3-dispatch.git"
-        },
-        {
-          "type": "website",
-          "url": "https://d3js.org/d3-dispatch/"
-        }
-      ],
-      "hashes": [
-        {
-          "alg": "SHA-512",
-          "content": "af35323d4fd2eebc147e53322dcd444c37818f4351b8728a01cbee928cf086c86bea0e9ce5df338787368108d8d9b6747577862d67353c5d7be0fdad56f2a17e"
-        }
-      ],
       "licenses": [
         {
           "license": {
@@ -438,35 +230,12 @@
       ]
     },
     {
-      "bom-ref": "d3-drag@3.0.0",
       "type": "library",
+      "bom-ref": "d3-drag@3.0.0",
       "name": "d3-drag",
       "version": "3.0.0",
       "scope": "required",
-      "author": "Mike Bostock",
-      "description": "Drag and drop SVG, HTML or Canvas using mouse or touch input.",
       "purl": "pkg:npm/d3-drag@3.0.0",
-      "properties": [],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/d3-drag/-/d3-drag-3.0.0.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "https://github.com/d3/d3-drag.git"
-        },
-        {
-          "type": "website",
-          "url": "https://d3js.org/d3-drag/"
-        }
-      ],
-      "hashes": [
-        {
-          "alg": "SHA-512",
-          "content": "a566d424b7444d503c95034979c331a177c7eb1fa63b6510a3cad2999f90ab171bc80de17dea6b160213fff1d6da79470a159e2083304b616afa010046485392"
-        }
-      ],
       "licenses": [
         {
           "license": {
@@ -476,35 +245,12 @@
       ]
     },
     {
-      "bom-ref": "d3-ease@3.0.1",
       "type": "library",
+      "bom-ref": "d3-ease@3.0.1",
       "name": "d3-ease",
       "version": "3.0.1",
       "scope": "required",
-      "author": "Mike Bostock",
-      "description": "Easing functions for smooth animation.",
       "purl": "pkg:npm/d3-ease@3.0.1",
-      "properties": [],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/d3-ease/-/d3-ease-3.0.1.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "https://github.com/d3/d3-ease.git"
-        },
-        {
-          "type": "website",
-          "url": "https://d3js.org/d3-ease/"
-        }
-      ],
-      "hashes": [
-        {
-          "alg": "SHA-512",
-          "content": "c11fd72b70f75dc2c8670a5bbd0c10e5f2bef1891db358a9ec0d93c5ed32c6771749dab52fdb24706edb95c79d90e5fe65c83118098b5f516b4466c00f0ce2d3"
-        }
-      ],
       "licenses": [
         {
           "license": {
@@ -514,35 +260,12 @@
       ]
     },
     {
-      "bom-ref": "d3-interpolate@3.0.1",
       "type": "library",
+      "bom-ref": "d3-interpolate@3.0.1",
       "name": "d3-interpolate",
       "version": "3.0.1",
       "scope": "required",
-      "author": "Mike Bostock",
-      "description": "Interpolate numbers, colors, strings, arrays, objects, whatever!",
       "purl": "pkg:npm/d3-interpolate@3.0.1",
-      "properties": [],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/d3-interpolate/-/d3-interpolate-3.0.1.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "https://github.com/d3/d3-interpolate.git"
-        },
-        {
-          "type": "website",
-          "url": "https://d3js.org/d3-interpolate/"
-        }
-      ],
-      "hashes": [
-        {
-          "alg": "SHA-512",
-          "content": "ddb62cd6b383df7ba8f1aa897ca3f72563c089b830f199b6f8bf6f04a107276460faf89347ba39326bf999972278df854586803965f94890135fa9353d6cfbda"
-        }
-      ],
       "licenses": [
         {
           "license": {
@@ -552,35 +275,12 @@
       ]
     },
     {
-      "bom-ref": "d3-selection@3.0.0",
       "type": "library",
+      "bom-ref": "d3-selection@3.0.0",
       "name": "d3-selection",
       "version": "3.0.0",
       "scope": "required",
-      "author": "Mike Bostock",
-      "description": "Data-driven DOM manipulation: select elements and join them to data.",
       "purl": "pkg:npm/d3-selection@3.0.0",
-      "properties": [],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/d3-selection/-/d3-selection-3.0.0.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "https://github.com/d3/d3-selection.git"
-        },
-        {
-          "type": "website",
-          "url": "https://d3js.org/d3-selection/"
-        }
-      ],
-      "hashes": [
-        {
-          "alg": "SHA-512",
-          "content": "7e64d159b34c9ac996abac4957c0f5f54fe0c3f6f0ac77cd5f1ac837e1df6609f3a931e9f633a628c86c4d48d73899d939d658f50dbccb8c9e6cacea0ca97195"
-        }
-      ],
       "licenses": [
         {
           "license": {
@@ -590,35 +290,12 @@
       ]
     },
     {
-      "bom-ref": "d3-timer@3.0.1",
       "type": "library",
+      "bom-ref": "d3-timer@3.0.1",
       "name": "d3-timer",
       "version": "3.0.1",
       "scope": "required",
-      "author": "Mike Bostock",
-      "description": "An efficient queue capable of managing thousands of concurrent animations.",
       "purl": "pkg:npm/d3-timer@3.0.1",
-      "properties": [],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/d3-timer/-/d3-timer-3.0.1.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "https://github.com/d3/d3-timer.git"
-        },
-        {
-          "type": "website",
-          "url": "https://d3js.org/d3-timer/"
-        }
-      ],
-      "hashes": [
-        {
-          "alg": "SHA-512",
-          "content": "9dd7c9fc9c7131dde7c37d6ec8aa18da76a2bc5fabdbd57e2dcd2cbd9c5ed49bef2119a2f2152caccbdd3b0812d68eae0479a2cfdd60790d3294f3f46a3d5550"
-        }
-      ],
       "licenses": [
         {
           "license": {
@@ -628,35 +305,12 @@
       ]
     },
     {
-      "bom-ref": "d3-transition@3.0.1",
       "type": "library",
+      "bom-ref": "d3-transition@3.0.1",
       "name": "d3-transition",
       "version": "3.0.1",
       "scope": "required",
-      "author": "Mike Bostock",
-      "description": "Animated transitions for D3 selections.",
       "purl": "pkg:npm/d3-transition@3.0.1",
-      "properties": [],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/d3-transition/-/d3-transition-3.0.1.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "https://github.com/d3/d3-transition.git"
-        },
-        {
-          "type": "website",
-          "url": "https://d3js.org/d3-transition/"
-        }
-      ],
-      "hashes": [
-        {
-          "alg": "SHA-512",
-          "content": "0292af7e3b1247ab60d3ac6b2f8df80b45b274bafb25ec0107757eff7f51307b1a5d3386d339adfce0177a78393392c19b4a239b126ba68990559d5a3ef04be3"
-        }
-      ],
       "licenses": [
         {
           "license": {
@@ -666,35 +320,12 @@
       ]
     },
     {
-      "bom-ref": "d3-zoom@3.0.0",
       "type": "library",
+      "bom-ref": "d3-zoom@3.0.0",
       "name": "d3-zoom",
       "version": "3.0.0",
       "scope": "required",
-      "author": "Mike Bostock",
-      "description": "Pan and zoom SVG, HTML or Canvas using mouse or touch input.",
       "purl": "pkg:npm/d3-zoom@3.0.0",
-      "properties": [],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/d3-zoom/-/d3-zoom-3.0.0.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "https://github.com/d3/d3-zoom.git"
-        },
-        {
-          "type": "website",
-          "url": "https://d3js.org/d3-zoom/"
-        }
-      ],
-      "hashes": [
-        {
-          "alg": "SHA-512",
-          "content": "6fc02657791f41aa9602e69c6cfb8d6cbeaf6a19ce25f94e85ec4bccc30d2e06badbefe7874273bc9d1a3bfe5ae4c560505192ec7bb53fd3f4de8ddf2640c2cb"
-        }
-      ],
       "licenses": [
         {
           "license": {
@@ -704,30 +335,12 @@
       ]
     },
     {
-      "bom-ref": "use-sync-external-store@1.6.0",
       "type": "library",
-      "name": "use-sync-external-store",
-      "version": "1.6.0",
+      "bom-ref": "js-tokens@4.0.0",
+      "name": "js-tokens",
+      "version": "4.0.0",
       "scope": "required",
-      "description": "Backwards compatible shim for React's useSyncExternalStore. Works with any React that supports hooks.",
-      "purl": "pkg:npm/use-sync-external-store@1.6.0",
-      "properties": [],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/use-sync-external-store/-/use-sync-external-store-1.6.0.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "https://github.com/facebook/react.git"
-        }
-      ],
-      "hashes": [
-        {
-          "alg": "SHA-512",
-          "content": "3e9e864b018ffcdacf22bc551402243907b2c3c9457a73878a34169144eb0efac5e002eaca53f60bf28291e4bd76950cdcabd84508676b9bedec82fde7e650f7"
-        }
-      ],
+      "purl": "pkg:npm/js-tokens@4.0.0",
       "licenses": [
         {
           "license": {
@@ -737,39 +350,87 @@
       ]
     },
     {
-      "bom-ref": "zustand@4.5.7",
       "type": "library",
+      "bom-ref": "loose-envify@1.4.0",
+      "name": "loose-envify",
+      "version": "1.4.0",
+      "scope": "required",
+      "purl": "pkg:npm/loose-envify@1.4.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "react@18.3.1",
+      "name": "react",
+      "version": "18.3.1",
+      "scope": "required",
+      "purl": "pkg:npm/react@18.3.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "react-dom@18.3.1",
+      "name": "react-dom",
+      "version": "18.3.1",
+      "scope": "required",
+      "purl": "pkg:npm/react-dom@18.3.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "scheduler@0.23.2",
+      "name": "scheduler",
+      "version": "0.23.2",
+      "scope": "required",
+      "purl": "pkg:npm/scheduler@0.23.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "use-sync-external-store@1.6.0",
+      "name": "use-sync-external-store",
+      "version": "1.6.0",
+      "scope": "required",
+      "purl": "pkg:npm/use-sync-external-store@1.6.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "zustand@4.5.7",
       "name": "zustand",
       "version": "4.5.7",
       "scope": "required",
-      "author": "Paul Henschel",
-      "description": "\ud83d\udc3b Bear necessities for state management in React",
       "purl": "pkg:npm/zustand@4.5.7",
-      "properties": [],
-      "externalReferences": [
-        {
-          "type": "distribution",
-          "url": "https://registry.npmjs.org/zustand/-/zustand-4.5.7.tgz"
-        },
-        {
-          "type": "vcs",
-          "url": "git+https://github.com/pmndrs/zustand.git"
-        },
-        {
-          "type": "website",
-          "url": "https://github.com/pmndrs/zustand"
-        },
-        {
-          "type": "issue-tracker",
-          "url": "https://github.com/pmndrs/zustand/issues"
-        }
-      ],
-      "hashes": [
-        {
-          "alg": "SHA-512",
-          "content": "087394cbb9aede56c3ea8e8b24b7e59698e4ce11d7481957f01f7ea8f75d52c21f785e52fd4679ab49260ac9d1a93d541c54197213450c3ccc6d0b2e7ac1d697"
-        }
-      ],
       "licenses": [
         {
           "license": {
@@ -781,9 +442,11 @@
   ],
   "dependencies": [
     {
-      "ref": "sdex-connectmap-frontend@1.0.0",
+      "ref": "sdex-connectmap-frontend@1.0.1",
       "dependsOn": [
-        "@xyflow/react@12.8.5"
+        "@xyflow/react@12.8.5",
+        "react-dom@18.3.1",
+        "react@18.3.1"
       ]
     },
     {
@@ -820,11 +483,24 @@
       ]
     },
     {
+      "ref": "@types/prop-types@15.7.15",
+      "dependsOn": []
+    },
+    {
+      "ref": "@types/react@18.3.18",
+      "dependsOn": [
+        "@types/prop-types@15.7.15",
+        "csstype@3.2.3"
+      ]
+    },
+    {
       "ref": "@xyflow/react@12.8.5",
       "dependsOn": [
+        "@xyflow/system@0.0.69",
         "classcat@5.0.5",
-        "zustand@4.5.7",
-        "@xyflow/system@0.0.69"
+        "react-dom@18.3.1",
+        "react@18.3.1",
+        "zustand@4.5.7"
       ]
     },
     {
@@ -843,6 +519,10 @@
     },
     {
       "ref": "classcat@5.0.5",
+      "dependsOn": []
+    },
+    {
+      "ref": "csstype@3.2.3",
       "dependsOn": []
     },
     {
@@ -881,11 +561,11 @@
     {
       "ref": "d3-transition@3.0.1",
       "dependsOn": [
-        "d3-selection@3.0.0",
         "d3-color@3.1.0",
         "d3-dispatch@3.0.1",
         "d3-ease@3.0.1",
         "d3-interpolate@3.0.1",
+        "d3-selection@3.0.0",
         "d3-timer@3.0.1"
       ]
     },
@@ -900,12 +580,46 @@
       ]
     },
     {
-      "ref": "use-sync-external-store@1.6.0",
+      "ref": "js-tokens@4.0.0",
       "dependsOn": []
+    },
+    {
+      "ref": "loose-envify@1.4.0",
+      "dependsOn": [
+        "js-tokens@4.0.0"
+      ]
+    },
+    {
+      "ref": "react@18.3.1",
+      "dependsOn": [
+        "loose-envify@1.4.0"
+      ]
+    },
+    {
+      "ref": "react-dom@18.3.1",
+      "dependsOn": [
+        "loose-envify@1.4.0",
+        "react@18.3.1",
+        "scheduler@0.23.2"
+      ]
+    },
+    {
+      "ref": "scheduler@0.23.2",
+      "dependsOn": [
+        "loose-envify@1.4.0"
+      ]
+    },
+    {
+      "ref": "use-sync-external-store@1.6.0",
+      "dependsOn": [
+        "react@18.3.1"
+      ]
     },
     {
       "ref": "zustand@4.5.7",
       "dependsOn": [
+        "@types/react@18.3.18",
+        "react@18.3.1",
         "use-sync-external-store@1.6.0"
       ]
     }

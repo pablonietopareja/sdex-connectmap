@@ -8,6 +8,7 @@ import type {
   ConnectionStatus,
   EdgeVisualStyle,
   NetworkInterface,
+  TopologySnapshot,
 } from "../types";
 import type {
   ConnectionFlowNode,
@@ -60,6 +61,7 @@ import { DetailsDrawer } from "./DetailsDrawer";
 import { SummaryPanel } from "./SummaryPanel";
 import { TopBar } from "./TopBar";
 import { TopologyAlerts } from "./TopologyAlerts";
+import { Onboarding } from "./Onboarding";
 
 function connectionProps(
   node = makeNode(),
@@ -483,9 +485,9 @@ describe("details, counts and operational state", () => {
 });
 
 describe("top bar controls", () => {
-  function renderBar(overrides: Partial<React.ComponentProps<typeof TopBar>> = {}) {
-    const props: React.ComponentProps<typeof TopBar> = {
-      snapshot: makeSnapshot(undefined, { mock_mode: true }),
+  function renderBarProps(snapshot: TopologySnapshot): React.ComponentProps<typeof TopBar> {
+    return {
+      snapshot,
       editorEnabled: false,
       showNotEnabled: false,
       refreshInterval: 300,
@@ -498,6 +500,12 @@ describe("top bar controls", () => {
       onThemeChange: vi.fn(),
       onRefresh: vi.fn(),
       onOpenSettings: vi.fn(),
+    };
+  }
+
+  function renderBar(overrides: Partial<React.ComponentProps<typeof TopBar>> = {}) {
+    const props = {
+      ...renderBarProps(makeSnapshot(undefined, { mock_mode: true })),
       ...overrides,
     };
     render(<TopBar {...props} />);
@@ -541,6 +549,8 @@ describe("top bar controls", () => {
       screen.getByLabelText("Data source: Mock Mode"),
     ).toHaveTextContent("Mock Mode");
     expect(screen.queryByText("Real SDEX")).not.toBeInTheDocument();
+    expect(screen.getByText("Demo data ready")).toBeVisible();
+    expect(screen.queryByText("SDEX online")).not.toBeInTheDocument();
     const theme = screen.getByRole("combobox", { name: "Theme" });
     await user.click(theme);
     await user.keyboard("{ArrowUp}{Enter}");
@@ -556,6 +566,52 @@ describe("top bar controls", () => {
       screen.getByLabelText("Data source: Real SDEX"),
     ).toHaveTextContent("Real SDEX");
     expect(screen.queryByText("Mock Mode")).not.toBeInTheDocument();
+    expect(screen.getByText("SDEX online")).toBeVisible();
+    expect(screen.queryByText("Demo data ready")).not.toBeInTheDocument();
+  });
+
+  it.each<{
+    status: ConnectionStatus;
+    real: string;
+    demo: string;
+  }>([
+    { status: "connected", real: "SDEX online", demo: "Demo data ready" },
+    { status: "disconnected", real: "SDEX unavailable", demo: "Demo data unavailable" },
+    { status: "disabled", real: "SDEX unavailable", demo: "Demo data disabled" },
+    { status: "unlicensed", real: "License issue", demo: "Demo license issue" },
+    { status: "degraded", real: "SDEX degraded", demo: "Demo data degraded" },
+    { status: "unknown", real: "SDEX status unknown", demo: "Demo data status unknown" },
+  ])("keeps the $status calculation while distinguishing demo data from real SDEX", ({ status, real, demo }) => {
+    const snapshot = makeSnapshot(undefined, { gateway: makeGateway({ status }) });
+    const { rerender } = render(<TopBar {...renderBarProps(snapshot)} />);
+    const health = document.querySelector(".gateway-health");
+    expect(health).toHaveAttribute("data-status", status);
+    expect(health?.querySelector("strong")).toHaveTextContent(real);
+
+    rerender(<TopBar {...renderBarProps({ ...snapshot, mock_mode: true })} />);
+    expect(health).toHaveAttribute("data-status", status);
+    expect(health?.querySelector("strong")).toHaveTextContent(demo);
+    expect(health).toHaveAttribute("title", expect.stringContaining(`${demo}. Updated`));
+  });
+
+  it.each([false, true])("identifies stale data without implying current connectivity (Mock Mode: %s)", (mockMode) => {
+    renderBar({ snapshot: makeSnapshot(undefined, { mock_mode: mockMode, stale: true }) });
+    const health = document.querySelector(".gateway-health");
+    expect(health).toHaveAttribute("data-status", "unknown");
+    expect(health?.querySelector("strong")).toHaveTextContent(
+      mockMode ? "Showing cached demo data" : "Showing cached data",
+    );
+    expect(screen.queryByText("SDEX online")).not.toBeInTheDocument();
+    expect(screen.queryByText("Demo data ready")).not.toBeInTheDocument();
+  });
+
+  it.each([false, true])("preserves partial-discovery warnings and alarms (Mock Mode: %s)", async (mockMode) => {
+    const user = userEvent.setup();
+    renderBar({ snapshot: makeSnapshot(undefined, { mock_mode: mockMode, partial: true }) });
+    expect(screen.getByText("Partial discovery")).toBeVisible();
+    expect(document.querySelector(".gateway-health")).toHaveAttribute("data-status", "connected");
+    await user.click(screen.getByRole("button", { name: "Alarms, 1 active" }));
+    expect(screen.getByText("Discovery is partial")).toBeVisible();
   });
 
   it("keeps disabled TLS verification visible in the compact alarm centre", async () => {
@@ -578,6 +634,15 @@ describe("top bar controls", () => {
     );
     expect(document.querySelector(".brand > .brand-mark")).not.toBeInTheDocument();
     expect(screen.getByText("SDEX ConnectMap")).toBeVisible();
-    expect(screen.getByText("by Pablo")).toBeVisible();
+    expect(screen.queryByText("by Pablo")).not.toBeInTheDocument();
+  });
+});
+
+describe("onboarding branding", () => {
+  it("uses the project name without a personal imprint", () => {
+    render(<Onboarding onSave={() => Promise.resolve()} />);
+    expect(screen.getByText("SDEX ConnectMap", { exact: true })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Connect your SDEX Suite" })).toBeVisible();
+    expect(screen.queryByText(/by Pablo/)).not.toBeInTheDocument();
   });
 });

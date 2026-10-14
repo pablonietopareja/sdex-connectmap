@@ -53,6 +53,7 @@ def main() -> None:
     with zipfile.ZipFile(source, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
         for name, data in source_contents.items():
             entry = zipfile.ZipInfo(name, date_time=(2026, 1, 1, 0, 0, 0))
+            entry.create_system = 3  # Stable UNIX file metadata on Windows and Linux.
             entry.compress_type = zipfile.ZIP_DEFLATED
             entry.external_attr = 0o100644 << 16
             archive.writestr(entry, data)
@@ -76,10 +77,12 @@ def main() -> None:
     for artifact in (source, context):
         checksums.append(f"{hashlib.sha256(artifact.read_bytes()).hexdigest()}  {artifact.name}")
         print(f"PASS: {artifact.name} ({artifact.stat().st_size} bytes)")
-    (destination / "SHA256SUMS").write_text("\n".join(checksums) + "\n", encoding="utf-8")
+    (destination / "SHA256SUMS").write_text(
+        "\n".join(checksums) + "\n", encoding="utf-8", newline="\n"
+    )
     inventory = {name: hashlib.sha256(data).hexdigest() for name, data in source_contents.items()}
     (destination / "source-manifest.json").write_text(
-        json.dumps(inventory, indent=2) + "\n", encoding="utf-8"
+        json.dumps(inventory, indent=2) + "\n", encoding="utf-8", newline="\n"
     )
 
 

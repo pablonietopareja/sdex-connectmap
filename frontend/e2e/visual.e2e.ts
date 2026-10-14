@@ -163,6 +163,12 @@ test("visual preview, routing, themes and persistence", async ({ page }) => {
   });
 
   await page.goto("/");
+  await expect(page).toHaveTitle("SDEX ConnectMap");
+  await expect(page.getByTestId("topbar-brand")).toHaveText("SDEX ConnectMap");
+  await expect(page.locator(".gateway-health strong")).toHaveText("Demo data ready");
+  await expect(page.locator(".gateway-health")).toHaveAttribute("data-status", "connected");
+  await expect(page.getByText("SDEX online", { exact: true })).toHaveCount(0);
+  await expect(page.getByLabel("Data source: Mock Mode", { exact: true })).toBeVisible();
   await expect(page.locator(".connection-node-card")).toHaveCount(8);
   await expect(page.locator(".gateway-node-card")).toHaveCount(1);
   await expect(page.locator(".react-flow__edge")).toHaveCount(8);
@@ -487,5 +493,41 @@ test("compact viewports keep settings and the data source accessible", async ({ 
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.keyboard.press("Escape");
     await expect(settings).not.toBeVisible();
+  }
+});
+
+test("real-mode status labels follow synthetic API snapshots", async ({ page }) => {
+  let gatewayStatus: "connected" | "disconnected" = "connected";
+  let stale = false;
+  // The server remains in disposable Mock Mode. Only presentation inputs are
+  // varied here; no real SDEX origin or credentials are configured.
+  await page.route("**/api/topology", async (route) => {
+    const response = await route.fetch();
+    const snapshot = await response.json() as { gateway: Record<string, unknown> };
+    await route.fulfill({
+      response,
+      json: {
+        ...snapshot,
+        mock_mode: false,
+        stale,
+        gateway: { ...snapshot.gateway, status: gatewayStatus },
+      },
+    });
+  });
+
+  for (const state of [
+    { status: "connected", stale: false, copy: "SDEX online" },
+    { status: "disconnected", stale: false, copy: "SDEX unavailable" },
+    { status: "connected", stale: true, copy: "Showing cached data" },
+  ] as const) {
+    gatewayStatus = state.status;
+    stale = state.stale;
+    await page.goto("/");
+    await expect(page.locator(".gateway-health strong")).toHaveText(state.copy);
+    await expect(page.locator(".gateway-health")).toHaveAttribute(
+      "data-status", state.stale ? "unknown" : state.status,
+    );
+    await expect(page.getByLabel("Data source: Real SDEX", { exact: true })).toBeVisible();
+    await expect(page.getByText("Demo data ready", { exact: true })).toHaveCount(0);
   }
 });

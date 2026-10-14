@@ -2,7 +2,7 @@
 
 **A read-only topology viewer for industrial connections managed through SDEX Suite.**
 
-I built SDEX ConnectMap to make SDEX connections easier to understand on an industrial edge gateway: one map for configured devices, connection states and the network paths that can be resolved from the available data. The application runs in a single container and keeps its layout and settings locally.
+SDEX ConnectMap brings configured devices, connection states and resolvable network paths into one map for industrial edge gateways. It runs in a single container and keeps its layout and settings locally.
 
 > **Independent project.** SDEX ConnectMap integrates with SDEX Suite. It is not an official Softing product and does not imply Softing endorsement or certification.
 
@@ -22,7 +22,7 @@ flowchart LR
 
 ConnectMap communicates with the **SDEX server**, rather than connecting to PLCs, CNCs or brokers itself. Portainer can deploy the container, but it is not a runtime dependency. Rack and Switch elements represent the map's visual organization; they do not discover physical switches or change industrial network configuration.
 
-## What I built
+## Features
 
 - **Connection discovery:** Siemens S7-1200/1500, S7-300/400, Rockwell/Allen-Bradley, Modbus, SINUMERIK, Fanuc, OPC UA and MQTT adapters for the configuration exposed by SDEX.
 - **Status and diagnostics:** connected, disconnected, disabled, unlicensed, degraded and unknown states; partial discovery, cached-data warnings and active alarms.
@@ -30,7 +30,7 @@ ConnectMap communicates with the **SDEX server**, rather than connecting to PLCs
 - **Visual editing:** Rack grouping, Switch elements, cable waypoints, orthogonal bends, colors and animation direction, with session undo/redo for visual edits. Saved edits are stored in ConnectMap.
 - **Shared refresh:** manual refresh and selectable intervals of 1, 5, 10, 15, 30 or 60 minutes. Browser tabs receive Server-Sent Events and read the same backend snapshot.
 - **Persistent configuration:** SQLite, Fernet-encrypted SDEX passwords, retained map settings and automatic schema initialization.
-- **Offline demonstration:** clearly labeled Mock Mode with synthetic connections and failure scenarios.
+- **Offline demonstration:** clearly labeled Mock Mode with synthetic connections, demo-specific status text and failure scenarios. Demo status does not indicate a live SDEX connection.
 - **Container deployment:** non-root runtime, read-only root filesystem, dedicated data volume, local frontend assets and an application healthcheck.
 
 SDEX reads are limited to system information, network interfaces and supported connection modules. Login, session refresh and logout are the only SDEX POST operations. ConnectMap does not write device values, create SDEX connections or alter SDEX settings.
@@ -46,11 +46,18 @@ SDEX reads are limited to system information, network interfaces and supported c
 | Source development | Python 3.12 and Node.js 22; locked Python and npm dependencies |
 | Image targets | Linux AMD64 and ARM64; native container acceptance is recorded in the release audit |
 
-I have field-tested the application in containers on Raspberry Pi and edgeNode, including communication with a real SDEX API. This is maintainer-reported operational experience, not a claim that every supported SDEX module or the exact published commit was independently tested in that environment. The [release audit](RELEASE_AUDIT.md) separates that field experience from the automated checks for the published source.
+Maintainer field testing includes container deployments on Raspberry Pi and edgeNode with a real SDEX API. That operational experience is separate from verification of the 1.0.1 source candidate and does not certify every SDEX module or target environment. See the [release audit](RELEASE_AUDIT.md) for revision-specific results and outstanding qualification.
 
 ## Quick start: offline demo
 
-From the repository root, in PowerShell:
+Clone the repository, or extract a source archive, then run the demo from the repository root in PowerShell:
+
+```powershell
+git clone https://github.com/pablonietopareja/sdex-connectmap.git
+Set-Location sdex-connectmap
+```
+
+The following commands build the source in the checkout. A clone follows the current `main` branch; use a reviewed release tag for a pinned deployment once that tag is available.
 
 ```powershell
 Copy-Item .env.example .env
@@ -60,7 +67,7 @@ docker compose up -d --build
 docker compose ps
 ```
 
-Open **http://localhost:8080**. The interface displays **Mock Mode** and uses synthetic data without contacting SDEX. Choose a refresh interval, open connection details and try the Editor tools. The default published address is `127.0.0.1`; it is reachable from the Docker host only.
+Open **http://localhost:8080**. The interface displays **Mock Mode** and **Demo data ready** for a healthy synthetic source; it does not contact SDEX. Choose a refresh interval, open connection details and try the Editor tools. The default published address is `127.0.0.1`; it is reachable from the Docker host only.
 
 The shell setting applies to commands in that session. To keep a demo across deployments, set `CONNECTMAP_MOCK_MODE=true` in the private `.env` file. To use real SDEX, set it to `false` and recreate the service:
 
@@ -107,7 +114,9 @@ docker compose up -d --build
 docker compose logs --tail 100 connectmap
 ```
 
-To deploy through Portainer, build `sdex-connectmap:1.0.0` in the **target Docker environment**, then create a stack using [portainer-stack.yml](portainer-stack.yml). The stack uses a local image and does not require a registry. Set `CONNECTMAP_BIND_ADDRESS` deliberately when access from another trusted device is required. The Docker environment needs network access to the configured SDEX origin.
+To deploy through Portainer, build `sdex-connectmap:1.0.1` in the **target Docker environment**, then create a stack using [portainer-stack.yml](portainer-stack.yml). The stack uses a local image and does not require a registry. Set `CONNECTMAP_BIND_ADDRESS` deliberately when access from another trusted device is required. The Docker environment needs network access to the configured SDEX origin.
+
+The runtime uses digest-pinned Python 3.12 on Debian Trixie with available OS updates applied. Package installation happens during the build; `pip` and `ensurepip` are absent from the final runtime. The measured image still has unresolved HIGH advisories. Review the [image findings and disposition](RELEASE_AUDIT.md#image-scan-findings) before deployment.
 
 [Deployment](docs/DEPLOYMENT.md) covers source build contexts, persistent volumes, reverse proxies, backups and upgrades. A build-context TAR is source for **Images > Build**, not an image archive for **Images > Import**.
 
@@ -132,7 +141,9 @@ Pop-Location
 
 See [Development and testing](docs/DEVELOPMENT.md) for the local demo and browser tests.
 
-**Published verification:** the [GitHub Actions run #38408177090](https://github.com/pablonietopareja/sdex-connectmap/actions/runs/38408177090) passed all five jobs for commit [`2ce9fac20c9adb36087a779f636bc62f72cee8d0`](https://github.com/pablonietopareja/sdex-connectmap/commit/2ce9fac20c9adb36087a779f636bc62f72cee8d0): source checks on Ubuntu and Windows, configured dependency/static/secret security scans, and native AMD64 and ARM64 Docker builds with disposable container acceptance. The container tests use **synthetic Mock Mode**; they do not contact a live SDEX installation or constitute an image OS vulnerability scan. See the [release audit](RELEASE_AUDIT.md) for exact scope, test counts and limitations.
+The [CI workflow](.github/workflows/ci.yml) checks source behavior on Linux and Windows, dependency/static/secret security and native AMD64/ARM64 containers using synthetic Mock Mode. The 1.0.0 baseline commit [`90f89c0`](https://github.com/pablonietopareja/sdex-connectmap/commit/90f89c0d91c57475dd9a893530b167481a07b1f0) passed [run #38412311674 on attempt 2](https://github.com/pablonietopareja/sdex-connectmap/actions/runs/38412311674/attempts/2), after an editor test failed on attempt 1. Those results do not validate the changed 1.0.1 candidate. Its remote CI is pending; current local results and remaining checks are recorded in the [release audit](RELEASE_AUDIT.md).
+
+**Release disposition:** GO for source-candidate review; the formal 1.0.1 GitHub Release remains on HOLD pending explicit acceptance of residual image risk and successful CI for the final revision. CI image findings are informational, so a successful job does not imply that its HIGH/CRITICAL vulnerability gate passed.
 
 ## Limitations
 
@@ -153,7 +164,6 @@ See [Development and testing](docs/DEVELOPMENT.md) for the local demo and browse
 | [Architecture](docs/ARCHITECTURE.md) | Modules, discovery, events and storage |
 | [Configuration](docs/CONFIGURATION.md) | Environment and persisted settings |
 | [Development](docs/DEVELOPMENT.md) | Local setup, synthetic tests and packaging |
-| [Publishing](docs/PUBLISHING.md) | Updating the existing GitHub repository safely |
 | [Changelog](CHANGELOG.md) | Source-release changes |
 | [Contributing](CONTRIBUTING.md) | Contribution expectations |
 | [Security](SECURITY.md) | Reporting and trust boundaries |

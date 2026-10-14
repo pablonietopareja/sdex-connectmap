@@ -25,11 +25,11 @@ RUN python -m pip wheel \
     -r requirements.txt
 
 
-FROM python:3.12-slim-bookworm@sha256:34386ef0cb081344d7ec1c103ba398e6e9f64e9ab3a1509accc92a4e24a07258 AS runtime
+FROM python:3.12-slim-trixie@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1 AS runtime
 
 LABEL org.opencontainers.image.title="SDEX ConnectMap" \
       org.opencontainers.image.description="Read-only industrial topology viewer for Softing SDEX Suite" \
-      org.opencontainers.image.version="1.0.0" \
+      org.opencontainers.image.version="1.0.1" \
       org.opencontainers.image.authors="Pablo Nieto Pareja" \
       org.opencontainers.image.licenses="MIT" \
       org.opencontainers.image.source="https://github.com/pablonietopareja/sdex-connectmap"
@@ -43,14 +43,23 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     CONNECTMAP_DISABLE_DOCS=true \
     CONNECTMAP_STATIC_DIR=/app/frontend/dist
 
+# Apply available security updates within the pinned runtime's Debian release.
+RUN apt-get update \
+    && apt-get upgrade --yes --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN groupadd --gid 10001 connectmap \
     && useradd --uid 10001 --gid connectmap --no-create-home --shell /usr/sbin/nologin connectmap \
     && mkdir -p /app/backend /app/frontend/dist /data \
     && chown -R connectmap:connectmap /app /data \
     && chmod 0700 /data
 
+# Package installation belongs to the build; keep only the installed runtime dependencies.
 RUN --mount=type=bind,from=python-builder,source=/wheels,target=/wheels,ro \
-    python -m pip install --no-cache-dir --no-compile /wheels/*
+    python -m pip install --no-cache-dir --no-compile /wheels/* \
+    && python -m pip uninstall --yes pip \
+    && python -c "import pathlib,shutil,sysconfig; shutil.rmtree(pathlib.Path(sysconfig.get_path('stdlib')) / 'ensurepip')" \
+    && rm -f /usr/local/bin/pip /usr/local/bin/pip3 /usr/local/bin/pip3.12
 
 COPY --chown=connectmap:connectmap backend/app /app/backend/app
 COPY --chown=connectmap:connectmap LICENSE THIRD_PARTY_NOTICES.md /app/

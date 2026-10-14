@@ -2,6 +2,19 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
+interface RackTopologySnapshot {
+  nodes: Array<{ id: string }>;
+  visual_topology?: {
+    elements: Array<{ id: string; rows?: number; columns?: number; capacity?: number }>;
+    rack_memberships: Array<{
+      rack_id: string;
+      connection_id: string;
+      row: number;
+      column: number;
+    }>;
+  };
+}
+
 const screenshotDirectory = fileURLToPath(
   new URL("../test-artifacts/editor/", import.meta.url),
 );
@@ -191,19 +204,76 @@ async function saveRackDimensions(
   columns: number,
 ) {
   await rack.locator(".rack-node-header").dblclick();
+  const rackId = await rack.locator("..").getAttribute("data-id");
+  if (!rackId) throw new Error("The Rack has no React Flow element identity.");
   const panel = page.getByTestId("rack-properties-panel");
   await expect(panel).toBeVisible();
   await panel.getByLabel("Rows").fill(String(rows));
   await panel.getByLabel("Columns").fill(String(columns));
   const responsePromise = page.waitForResponse(
-    (response) =>
-      response.request().method() === "PUT" &&
-      new URL(response.url()).pathname.startsWith("/api/visual-elements/"),
+    (response) => {
+      if (
+        response.request().method() !== "PUT" ||
+        decodeURIComponent(new URL(response.url()).pathname) !== `/api/visual-elements/${rackId}`
+      ) return false;
+      const payload = response.request().postDataJSON() as Record<string, unknown>;
+      return payload.rows !== undefined && payload.columns !== undefined;
+    },
   );
   await panel.getByRole("button", { name: "Save Rack" }).click();
-  expect((await responsePromise).ok()).toBe(true);
+  const response = await responsePromise;
+  expect(response.request().postDataJSON()).toMatchObject({ rows, columns });
+  expect(response.ok()).toBe(true);
+  expect(await response.json()).toMatchObject({ id: rackId, type: "rack", rows, columns });
+  // The PUT acknowledgement precedes App's snapshot reload and editor history.
+  // Wait for the operation and its visible Rack geometry before closing.
+  await expect(panel.getByRole("button", { name: "Save Rack", exact: true })).toBeEnabled();
+  await expect(panel.getByLabel("Rows")).toHaveValue(String(rows));
+  await expect(panel.getByLabel("Columns")).toHaveValue(String(columns));
+  await expect(rack.locator(".rack-node-header")).toContainText(`${rows} × ${columns}`);
+  await expect(rack.locator(".rack-slot")).toHaveCount(rows * columns);
+  const persisted = await page.request.get("/api/topology");
+  expect(persisted.ok()).toBe(true);
+  const topology = await persisted.json() as RackTopologySnapshot;
+  expect(topology.visual_topology?.elements.find((element) => element.id === rackId))
+    .toMatchObject({ rows, columns, capacity: rows * columns });
   await page.getByRole("button", { name: "Close Rack properties" }).click();
 }
+
+test("consecutive Rack resizes preserve occupancy and persist after reload", async ({ page }) => {
+  await page.goto("/");
+  const productionRack = page.getByTestId("rack-node").filter({ hasText: "Production Rack" });
+  await expect(productionRack).toHaveCount(1);
+  const beforeResponse = await page.request.get("/api/topology");
+  expect(beforeResponse.ok()).toBe(true);
+  const before = await beforeResponse.json() as RackTopologySnapshot;
+  const rackId = await productionRack.locator("..").getAttribute("data-id");
+  const membersBefore = before.visual_topology?.rack_memberships
+    .filter((membership) => membership.rack_id === rackId)
+    .map(({ connection_id, row, column }) => ({ connection_id, row, column }));
+  expect(membersBefore).toHaveLength(2);
+  await enableEditor(page);
+
+  for (const [rows, columns] of [[2, 2], [1, 3], [1, 2], [1, 3]]) {
+    await saveRackDimensions(page, productionRack, rows, columns);
+    await expect(productionRack.locator(".rack-slot-occupied")).toHaveCount(2);
+    await expect(productionRack.locator(".rack-slot-empty")).toHaveCount(rows * columns - 2);
+    await expect(productionRack).toContainText(`2/${rows * columns} occupied`);
+  }
+  await page.reload();
+  await expect(productionRack.locator(".rack-node-header")).toContainText("1 × 3");
+  await expect(productionRack.locator(".rack-slot-occupied")).toHaveCount(2);
+  await expect(productionRack.locator(".rack-slot-empty")).toHaveCount(1);
+  const afterResponse = await page.request.get("/api/topology");
+  expect(afterResponse.ok()).toBe(true);
+  const after = await afterResponse.json() as RackTopologySnapshot;
+  expect(after.visual_topology?.rack_memberships
+    .filter((membership) => membership.rack_id === rackId)
+    .map(({ connection_id, row, column }) => ({ connection_id, row, column })))
+    .toEqual(membersBefore);
+  expect(after.nodes.map((node) => node.id).sort())
+    .toEqual(before.nodes.map((node) => node.id).sort());
+});
 
 test("advanced Editor topology persists without mutating source connections", async ({
   page,
@@ -450,7 +520,11 @@ test("advanced Editor topology persists without mutating source connections", as
     expect.arrayContaining([deviceToSwitchLink.id, switchToSdexLink.id]),
   );
 
+  // Snapshot reloads briefly hide React Flow nodes while they are measured.
+  // hover() waits for a visible, stable card; focus()/press() alone do not.
+  await newSwitch.hover();
   await newSwitch.focus();
+  await expect(newSwitch).toBeFocused();
   await newSwitch.press("Enter");
   await expect(switchPanel).toBeVisible();
   await switchPanel.getByRole("button", { name: "Delete Switch" }).click();

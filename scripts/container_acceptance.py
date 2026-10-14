@@ -60,7 +60,7 @@ def wait_ready(name: str, port: int) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--image", default="sdex-connectmap:1.0.0")
+    parser.add_argument("--image", default="sdex-connectmap:1.0.1")
     args = parser.parse_args()
     name = "connectmap-acceptance-" + uuid4().hex[:12]
     volume = name + "-data"
@@ -88,12 +88,50 @@ def main() -> None:
         )
         port = published_port(name)
         wait_ready(name, port)
+        inspection = json.loads(docker("inspect", name))[0]
+        host = inspection["HostConfig"]
+        assert host["ReadonlyRootfs"] is True
+        assert host["CapDrop"] == ["ALL"]
+        assert "no-new-privileges:true" in host["SecurityOpt"]
+        assert host["Privileged"] is False and host["NetworkMode"] != "host"
+        data_mounts = [mount for mount in inspection["Mounts"] if mount["Destination"] == "/data"]
+        assert len(data_mounts) == 1 and data_mounts[0]["Type"] == "volume"
+        assert all(
+            mount["Destination"] == "/data"
+            or (mount["Destination"] == "/tmp" and mount["Type"] == "tmpfs")  # noqa: S108
+            for mount in inspection["Mounts"]
+        )
+        assert not any("docker.sock" in mount["Source"] for mount in inspection["Mounts"])
         assert docker("exec", name, "id", "-u") == "10001"
+        docker(
+            "exec",
+            name,
+            "python",
+            "-c",
+            "import importlib.util; "
+            "assert importlib.util.find_spec('pip') is None; "
+            "assert importlib.util.find_spec('ensurepip') is None",
+        )
         assert request(port, "/api/config/status")["mock_mode"] is True
         topology = request(port, "/api/topology")
         assert topology["nodes"] and topology["mock_mode"] is True
         assert "SDEX" in request(port, "/", text=True)
         request(port, "/api/settings", {"refresh_interval_seconds": 600})
+        # Mock Mode never contacts this reserved synthetic endpoint. Exercise the actual
+        # persistence layer without publishing credentials or using a live SDEX profile.
+        profile_program = (
+            "import asyncio; from pathlib import Path; "
+            "from app.persistence import Database; "
+            "from app.core.security import CredentialCipher; "
+            "from app.models.schemas import ConnectionProfile; "
+            "d=Database(Path('/data/connectmap.db'), "
+            "CredentialCipher.from_settings(Path('/data'),None)); "
+            "asyncio.run(d.initialize()); "
+            "asyncio.run(d.save_profile(ConnectionProfile(base_url='https://sdex.example.invalid', "
+            "username='synthetic-reader',password='acceptance-only-password'))); "
+            "assert b'acceptance-only-password' not in Path('/data/connectmap.db').read_bytes()"
+        )
+        docker("exec", name, "python", "-c", profile_program)
         key_hash = docker(
             "exec",
             name,
@@ -115,8 +153,26 @@ def main() -> None:
             "import hashlib; "
             "print(hashlib.sha256(open('/data/.connectmap-key','rb').read()).hexdigest())",
         )
+        docker(
+            "exec",
+            name,
+            "python",
+            "-c",
+            "import asyncio; from pathlib import Path; from app.persistence import Database; "
+            "from app.core.security import CredentialCipher; "
+            "d=Database(Path('/data/connectmap.db'), "
+            "CredentialCipher.from_settings(Path('/data'),None)); "
+            "p=asyncio.run(d.load_profile()); "
+            "assert p.base_url=='https://sdex.example.invalid'; "
+            "assert p.username=='synthetic-reader'; "
+            "assert p.password.get_secret_value()=='acceptance-only-password'; "
+            "assert p.verify_tls is True",
+        )
         print(
-            "PASS: Mock Mode, HTTP UI, healthcheck, UID10001, restart settings and key persistence."
+            "PASS: Mock Mode, HTTP UI, healthcheck, UID10001, read-only root, "
+            "dropped capabilities, "
+            "restricted mounts, loopback publishing, no runtime installer, "
+            "restart settings and encrypted profile/key."
         )
     finally:
         docker("rm", "-f", name, check=False)

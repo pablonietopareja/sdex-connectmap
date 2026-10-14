@@ -12,6 +12,8 @@ SDEX, edgeNode, Softing and other product names identify the systems with which 
 
 [Third-party notices](../THIRD_PARTY_NOTICES.md) lists the resolved runtime dependencies and license families. The upstream license files retained under [licenses](licenses) are part of the distribution and must remain available when distributing source or built images.
 
+The 1.0.1 candidate retains the same runtime dependency graph as 1.0.0, so the existing upstream notices still apply. The [runtime inventories](sbom/README.md) distinguish dependency components from application-version metadata.
+
 Most runtime packages use MIT, ISC, BSD or Apache terms. Two details deserve separate attention:
 
 - **certifi:** the package includes Mozilla-derived certificate data under MPL-2.0. Retain its notice and the applicable source-availability information. The exact upstream distribution is available from [certifi 2026.7.22 on PyPI](https://pypi.org/project/certifi/2026.7.22/); the retained license file identifies Mozilla's original certificate-data source. ConnectMap does not modify certifi's files.
@@ -24,3 +26,5 @@ The Python runtime retains dependency distribution metadata in the image. The co
 Keep `LICENSE`, `THIRD_PARTY_NOTICES.md` and the relevant upstream license files when redistributing. If changing dependencies, regenerate their version/license inventory from the new lockfiles and installed distributions, review new obligations and update the notices before publishing.
 
 The runtime inventory does not describe every OS package in the base image or every development tool. A complete binary-distribution review must also account for the chosen base image, compiled native libraries and any additional files introduced by the distributor. The [release audit](../RELEASE_AUDIT.md) records the checks actually completed.
+
+The 1.0.1 runtime uses a pinned Debian Trixie base with available package updates; its wheel builder remains on Bookworm. Application dependency versions, MIT terms and retained upstream notices are unchanged. The Trivy full license scan inventories OS, Python and loose-file license classifications, including unknown classifications. It is evidence for review rather than an independent legal clearance of every binary. Preserve the base distribution's terms and review obligations for the actual image being distributed.

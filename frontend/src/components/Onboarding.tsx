@@ -18,7 +18,7 @@ export function Onboarding({ status, onSave }: OnboardingProps) {
               draggable={false}
             />
           </div>
-          <p className="eyebrow">SDEX ConnectMap · by Pablo</p>
+          <p className="eyebrow">SDEX ConnectMap</p>
           <h1>Connect your SDEX Suite</h1>
           <p>
             Add a read-only SDEX profile to discover and visualize your industrial
