@@ -59,19 +59,20 @@ ConnectMap reads supported SDEX modules and system/network data. Its authenticat
 
 ## Container acceptance and qualification
 
-The 1.0.0 baseline commit `90f89c0d91c57475dd9a893530b167481a07b1f0` passed native AMD64 and ARM64 container jobs in [run #38412311674, attempt 2](https://github.com/pablonietopareja/sdex-connectmap/actions/runs/38412311674/attempts/2). Attempt 1 failed a Linux editor browser test before the dependent container jobs; the rerun passed without a source change. This is historical baseline evidence, not acceptance of the changed 1.0.1 candidate. Each successful baseline container job:
+Native AMD64 and ARM64 container acceptance **passed** in [GitHub Actions run #38636456166](https://github.com/pablonietopareja/sdex-connectmap/actions/runs/38636456166), attempt 1, for application source commit [`f74697aa3cf3d1713df7f58709e26d669ee0ea85`](https://github.com/pablonietopareja/sdex-connectmap/commit/f74697aa3cf3d1713df7f58709e26d669ee0ea85) on 14 October 2026. Each native job:
 
 - Validated `compose.yaml` and `portainer-stack.yml` with Docker Compose.
 - Built the exact packaged Docker context on its Linux architecture.
 - Started a disposable, non-privileged container in **synthetic Mock Mode**.
-- Verified the HTTP UI/API, `/api/health`, non-root UID `10001` and persisted settings/credential key after restart.
+- Verified the HTTP UI/API, `/api/health`, non-root UID `10001`, read-only root, dropped capabilities and restricted mounts.
+- Verified persisted settings, retained credential key and decryption of a synthetic profile after restart, as well as the absence of runtime `pip` and `ensurepip`.
 - Confirmed the random published test port stayed bound to loopback, including after restart.
 
-Those checks verified the baseline image's core runtime behavior on the two runner architectures. The 1.0.1 candidate passed local native AMD64 build and disposable acceptance on Ubuntu 24.04; new native ARM64 acceptance and remote CI remain pending. Current acceptance also inspects the read-only root, dropped capabilities, restricted mounts and decrypted synthetic profile after restart. Synthetic acceptance does not verify real SDEX connectivity, a particular Raspberry Pi OS or edgeNode firmware release, production network routes or a full OS vulnerability/license scan.
+These checks verify the built images' core behavior in disposable Linux runner environments. They do not qualify real SDEX connectivity, a particular Raspberry Pi OS or edgeNode firmware release, industrial network routes or production safety. Live SDEX acceptance of this exact commit was **NOT RUN**. Trivy vulnerability/license scanning was performed separately from the synthetic acceptance tests.
 
-The refreshed Bookworm scan retained 55 HIGH/CRITICAL package/advisory pairs. The measured Trixie comparison reduced this to 44 HIGH pairs across eight CVEs, with no CRITICAL or pip findings; its HIGH/CRITICAL gate still **FAILS**. Review the [image comparison and residual triage](../RELEASE_AUDIT.md#image-scan-findings) before distributing a built image. Passing health, persistence or CI job checks does not clear those advisories.
+The measured Bookworm-to-Trixie comparison reduced 2 CRITICAL and 53 HIGH findings to 0 CRITICAL and 44 HIGH. The actual AMD64 and ARM64 CI images each reported **0 CRITICAL, 44 HIGH, 58 MEDIUM, 61 LOW and 1 UNKNOWN** package/advisory findings, with the 44 HIGH pairs representing eight distinct CVEs. The HIGH/CRITICAL gate remains **FAIL** on both architectures; the archived findings list no fixed version. Review the [security policy](../SECURITY.md), [image triage](../RELEASE_AUDIT.md#image-scan-findings) and [maintainer residual-risk disposition](../RELEASE_AUDIT.md#maintainer-residual-risk-disposition) before use, particularly on industrial networks. Passing health, persistence or CI job checks does not clear those advisories. The maintainer accepts the disclosed residual risks for source publication; operators remain responsible for their own deployment decision and protective controls.
 
-Maintainer field testing on Raspberry Pi and edgeNode with a real SDEX API is separate from candidate validation and automated synthetic tests. Perform site-specific acceptance for the image and environment being deployed. The [release audit](../RELEASE_AUDIT.md) records current local checks and pending remote CI.
+Successful maintainer-reported field testing on Raspberry Pi and edgeNode with a real SDEX API is separate from revision-specific CI and does not establish live acceptance of this exact commit. Perform site-specific acceptance for the image and environment being deployed. The [release audit](../RELEASE_AUDIT.md) separates automated, local and field evidence.
 
 For a local repetition on a Docker-capable host:
 
@@ -84,7 +85,7 @@ python scripts/container_acceptance.py --image sdex-connectmap:1.0.1
 
 The acceptance script uses a disposable container/volume. Do not point it at operational SDEX data.
 
-CI additionally scans each native build with checksum-verified Trivy 0.75.0. It retains complete vulnerability/license reports and the separate HIGH/CRITICAL gate as 14-day workflow artifacts. Findings are informational rather than an automatic policy exemption: successful jobs still require release review, and scanner operational errors fail the job. The formal release remains on HOLD until residual risk is accepted and the final candidate and audit revision pass CI.
+CI scanned each native build with checksum-verified Trivy 0.75.0 and retained complete vulnerability/license reports and the separate failed HIGH/CRITICAL gate as `image-review-ubuntu-24.04-1` and `image-review-ubuntu-24.04-arm-1`, with 14-day retention. Findings are informational in the workflow; scanner operational errors or inconsistent evidence fail the job. Scanning a local image and publishing it to a registry are separate actions. This workflow does not publish prebuilt registry images.
 
 ## Reverse proxy and access control
 

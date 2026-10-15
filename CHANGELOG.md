@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.1 — Unreleased
+## 1.0.1
 
 - Preserve unsaved Rack dimensions when background topology updates change only aggregate status or position.
 - Ignore superseded topology GET responses so an older snapshot cannot replace a completed visual edit or clear newer refresh state.
@@ -13,13 +13,15 @@
 - Make source archive ordering, ZIP host metadata and generated text identical on Windows and Linux.
 - Add separate-process upgrade acceptance for synthetic 1.0.0 SQLite data, encrypted profiles, saved visual state and retained encryption keys.
 - Refresh the public documentation and synthetic UI screenshots; remove maintainer-specific repository publishing instructions.
-- Separate historical 1.0.0 CI and field experience from the current candidate's verification record.
+- Separate historical 1.0.0 CI and maintainer field experience from revision-specific automated verification.
 - Use a digest-pinned Debian Trixie Python 3.12 runtime with available OS updates after comparing native AMD64 images and compatibility; retain the Bookworm wheel builder.
 - Remove unused `pip` and `ensurepip` from the runtime after installing the unchanged application dependencies.
 - Add an unsuppressed Trivy vulnerability/license report to both native container CI jobs. Findings remain informational; scanner execution and evidence-consistency errors fail the job.
-- Record the baseline and measured alternatives separately: the selected comparison removes the two CRITICAL and six pip findings, while its HIGH/CRITICAL gate still fails with 44 HIGH package/advisory pairs across eight CVEs.
+- Record the baseline and measured alternatives separately: the selected runtime removes the two CRITICAL and six pip findings from the comparison. Both native CI images report 0 CRITICAL, 44 HIGH, 58 MEDIUM, 61 LOW and 1 UNKNOWN package/advisory pairs; their HIGH/CRITICAL gates remain FAIL, with 44 HIGH pairs across eight CVEs.
+- Complete Linux/Windows source checks, configured security checks and native AMD64/ARM64 builds and synthetic container acceptance in all five CI jobs on the first attempt.
+- Record the maintainer's explicit acceptance of the disclosed residual image risk for publication of the open-source code, with deployment restrictions and no vulnerability clearance or production certification.
 
-The [release audit](RELEASE_AUDIT.md) records executed checks and pending qualification. Remote CI for the changed 1.0.1 candidate is pending. A formal release remains on HOLD until residual image risk is explicitly accepted and the final revision passes CI; no GitHub tag or formal Release is assumed to exist.
+Application source commit [`f74697aa3cf3d1713df7f58709e26d669ee0ea85`](https://github.com/pablonietopareja/sdex-connectmap/commit/f74697aa3cf3d1713df7f58709e26d669ee0ea85) passed [GitHub Actions run #38636456166](https://github.com/pablonietopareja/sdex-connectmap/actions/runs/38636456166). The [release audit](RELEASE_AUDIT.md) records the evidence and [residual-risk disposition](RELEASE_AUDIT.md#maintainer-residual-risk-disposition). The workflow builds and tests local images; it does not publish prebuilt images to a registry.
 
 ## 1.0.0 — 2026-10-13
 

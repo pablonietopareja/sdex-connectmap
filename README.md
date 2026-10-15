@@ -46,7 +46,7 @@ SDEX reads are limited to system information, network interfaces and supported c
 | Source development | Python 3.12 and Node.js 22; locked Python and npm dependencies |
 | Image targets | Linux AMD64 and ARM64; native container acceptance is recorded in the release audit |
 
-Maintainer field testing includes container deployments on Raspberry Pi and edgeNode with a real SDEX API. That operational experience is separate from verification of the 1.0.1 source candidate and does not certify every SDEX module or target environment. See the [release audit](RELEASE_AUDIT.md) for revision-specific results and outstanding qualification.
+Maintainer field testing includes container deployments on Raspberry Pi and edgeNode with a real SDEX API. That operational experience is separate from automated verification of the 1.0.1 application source and does not certify every SDEX module or target environment. See the [release audit](RELEASE_AUDIT.md) for revision-specific results and outstanding qualification.
 
 ## Quick start: offline demo
 
@@ -57,7 +57,7 @@ git clone https://github.com/pablonietopareja/sdex-connectmap.git
 Set-Location sdex-connectmap
 ```
 
-The following commands build the source in the checkout. A clone follows the current `main` branch; use a reviewed release tag for a pinned deployment once that tag is available.
+The following commands build the source in the checkout. Its version is recorded in [VERSION](VERSION). A clone follows `main`; for a versioned deployment, select the corresponding reviewed release tag from the repository's available tags.
 
 ```powershell
 Copy-Item .env.example .env
@@ -141,9 +141,9 @@ Pop-Location
 
 See [Development and testing](docs/DEVELOPMENT.md) for the local demo and browser tests.
 
-The [CI workflow](.github/workflows/ci.yml) checks source behavior on Linux and Windows, dependency/static/secret security and native AMD64/ARM64 containers using synthetic Mock Mode. The 1.0.0 baseline commit [`90f89c0`](https://github.com/pablonietopareja/sdex-connectmap/commit/90f89c0d91c57475dd9a893530b167481a07b1f0) passed [run #38412311674 on attempt 2](https://github.com/pablonietopareja/sdex-connectmap/actions/runs/38412311674/attempts/2), after an editor test failed on attempt 1. Those results do not validate the changed 1.0.1 candidate. Its remote CI is pending; current local results and remaining checks are recorded in the [release audit](RELEASE_AUDIT.md).
+The [CI workflow](.github/workflows/ci.yml) validated application source commit [`f74697aa3cf3d1713df7f58709e26d669ee0ea85`](https://github.com/pablonietopareja/sdex-connectmap/commit/f74697aa3cf3d1713df7f58709e26d669ee0ea85) in [run #38636456166](https://github.com/pablonietopareja/sdex-connectmap/actions/runs/38636456166). All five jobs passed on the first attempt: Linux and Windows source checks, backend/frontend/browser tests, configured security checks, and native AMD64/ARM64 Docker builds and container acceptance. Automated acceptance uses synthetic Mock Mode, separately from maintainer field testing with real SDEX.
 
-**Release disposition:** GO for source-candidate review; the formal 1.0.1 GitHub Release remains on HOLD pending explicit acceptance of residual image risk and successful CI for the final revision. CI image findings are informational, so a successful job does not imply that its HIGH/CRITICAL vulnerability gate passed.
+I accept publication of the 1.0.1 source with the [disclosed residual image risks](RELEASE_AUDIT.md#maintainer-residual-risk-disposition). Both CI images report **0 CRITICAL and 44 HIGH package/advisory pairs across eight CVEs**; Trivy completed its scans, but the HIGH/CRITICAL gates remain **FAIL**. Successful CI is not vulnerability clearance or an industrial safety certificate. Operators must review the [security policy](SECURITY.md), protect access and assess their own deployment before use.
 
 ## Limitations
 
